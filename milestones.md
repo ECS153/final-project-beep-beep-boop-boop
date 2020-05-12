@@ -5,6 +5,7 @@ __General updates:__
 * Everyone
    * Made proposal video. [link]()
 
+---
 
 ### 5/11/2020 Meeting
 __General updates:__

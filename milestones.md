@@ -1,6 +1,7 @@
 # Milestone 1
-## 5/11/2020 Meeting
-## General updates:
+
+### 5/11/2020 Meeting
+__General updates:__
 * Hin
     * Action item: Implement simple messaging system (demo)
 * Ryan
@@ -10,7 +11,7 @@
 * Everyone
     * Make proposal video tomorrow
 
-## Agenda:
+__Agenda:__
 * How to host the application
     * Ask if we need to host it live.
 * What language to use

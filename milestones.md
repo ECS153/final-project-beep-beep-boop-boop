@@ -3,7 +3,7 @@
 ### 5/12/2020 Meeting
 __General updates:__
 * Everyone
-   * Made proposal video. [link]()
+   * Made proposal video [here](https://drive.google.com/file/d/1BX0ShXLLu6uYyixAmfiosh9aUVE2xdBV/view?usp=sharing)
 
 ---
 

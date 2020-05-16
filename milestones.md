@@ -1,7 +1,7 @@
 
 # Milestone 2
 
-###5/16/2020 Meeting
+### 5/16/2020 Meeting
 __General updates:__
 * Hin
     * Action item: Encrypt / decrypt message testing on the server

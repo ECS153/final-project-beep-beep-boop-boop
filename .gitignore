@@ -5,3 +5,6 @@
 .idea/modules.xml
 .idea/vcs.xml
 .idea/workspace.xml
+*.pem
+app/.DS_Store
+app/templates/.DS_Store

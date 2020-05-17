@@ -72,8 +72,9 @@ def sessions():
 
 @socketio.on('request_public_key')
 def handle_public_key_request(methods=['GET', 'POST']):
-    print(Keys.getPublicKey().export_key())
-    send(Keys.getPublicKey().export_key())
+    # print(Keys.getPublicKey().export_key())
+    socketio.emit('public key', Keys.getPublicKey().export_key())
+    # send(Keys.getPublicKey().export_key())
 
 
 @socketio.on('my event')

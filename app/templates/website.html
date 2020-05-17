@@ -24,10 +24,11 @@
     var socket = io.connect('http://' + document.domain + ':' + location.port);
     var server_public_key = null;
 
-    socket.on('connect', function() {
-        socket.emit('request_public_key', function(data) {
+    socket.on('connect', function(key) {
+        socket.emit('request_public_key', function() {
           // TODO: still figuring out how to pick up public key sent from server
         })
+        
         
         var form = $('form' ).on( 'submit', function( e ) {
           e.preventDefault()
@@ -39,14 +40,18 @@
           } )
           $( 'input.message' ).val( '' ).focus()
         } )
-      } )
+    } )
 
-      socket.on( 'my response', function( msg ) {
-        console.log( msg )
-        if( typeof msg.user_name !== 'undefined' ) {
-          $( 'h3' ).remove()
-          $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.user_name+'</b> '+msg.message+'</div>' )
-        }
-      })
+    socket.on('public key', function(public_key){
+      console.log(public_key)
+    })
+
+    socket.on( 'my response', function( msg ) {
+      console.log( msg )
+      if( typeof msg.user_name !== 'undefined' ) {
+        $( 'h3' ).remove()
+        $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.user_name+'</b> '+msg.message+'</div>' )
+      }
+    })
 </script>
 </html>

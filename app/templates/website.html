@@ -3,11 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>App</title>
+    <title>Mixnet Messenger</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename = 'main.js') }}"></script>
 </head>
 
 <body>
-    <p>App</p>
+    <p>Mixnet Messenger</p>
 
     <h3 style='color: #ccc;font-size: 30px;'>No message yet..</h3>
     <div class="message_holder"></div>
@@ -18,40 +21,4 @@
     </form>
 </body>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
-<script type="text/javascript">
-    var socket = io.connect('http://' + document.domain + ':' + location.port);
-    var server_public_key = null;
-
-    socket.on('connect', function(key) {
-        socket.emit('request_public_key', function() {
-          // TODO: still figuring out how to pick up public key sent from server
-        })
-        
-        
-        var form = $('form' ).on( 'submit', function( e ) {
-          e.preventDefault()
-          let user_name = $( 'input.username' ).val()
-          let user_input = $( 'input.message' ).val()
-          socket.emit( 'my event', {
-            user_name : user_name,
-            message : user_input
-          } )
-          $( 'input.message' ).val( '' ).focus()
-        } )
-    } )
-
-    socket.on('public key', function(public_key){
-      console.log(public_key)
-    })
-
-    socket.on( 'my response', function( msg ) {
-      console.log( msg )
-      if( typeof msg.user_name !== 'undefined' ) {
-        $( 'h3' ).remove()
-        $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.user_name+'</b> '+msg.message+'</div>' )
-      }
-    })
-</script>
 </html>

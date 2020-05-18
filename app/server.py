@@ -2,7 +2,8 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES, PKCS1_OAEP
 import base64
 import os.path
 
@@ -64,6 +65,34 @@ class Keys:  # since python doesn't support private, try to only use the method 
         return Keys.__singleton.__private_key
 
 
+def encrypt(data, public_key):
+    session_key = get_random_bytes(16)
+
+    # Encrypt the session key with the public RSA key
+    cipher_rsa = PKCS1_OAEP.new(public_key)
+    enc_session_key = cipher_rsa.encrypt(session_key)
+
+    # Encrypt the data with the AES session key
+    cipher_aes = AES.new(session_key, AES.MODE_EAX)
+    ciphertext, tag = cipher_aes.encrypt_and_digest(data)
+    encoded = [x for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext)]
+    return encoded
+
+
+def decrypt(encoded_data):
+    private_key = RSA.import_key(open("private.pem").read())
+    enc_session_key, nonce, tag, ciphertext = encoded_data
+
+    # Decrypt the session key with the private RSA key
+    cipher_rsa = PKCS1_OAEP.new(private_key)
+    session_key = cipher_rsa.decrypt(enc_session_key)
+
+    # Decrypt the data with the AES session key
+    cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
+    data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+    return data.decode("utf-8")
+
+
 # SocketIO #
 @app.route('/')
 def sessions():
@@ -88,6 +117,18 @@ def ack(methods=['GET', 'POST']):
 
 
 def main():
+    # data = "I am a potato who is eating potato from a potato plant in a potato farm."
+    # encrypted_data = encrypt(data.encode("utf-8"), Keys.getPublicKey())
+    # decrypted_data = decrypt(encrypted_data)
+    #
+    # print("************Encryption Test***************")
+    # print("Original: ", data)
+    # print("***************************")
+    # print("Encrypted: ", encrypted_data)
+    # print("***************************")
+    # print("Decrypted: ", decrypted_data)
+    # print("***************************")
+
     socketio.run(app, debug=True)
 
 

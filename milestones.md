@@ -1,5 +1,29 @@
 
 # Milestone 2
+### 5/19/2020 Meeting
+__General updates:__
+* Hin
+    * Action item: Set up “sender” server
+* Ryan
+    * Action item: Figure out how to store keys on client
+* Patrick 
+    * Action item: Figure out how to host and connect servers
+
+__Agenda:__
+* Film video for milestone 2
+
+__Notes:__ 
+* Deploy servers
+    * Last server in chain will be the “sender” server
+    * Via Digital Ocean or PythonAnywhere
+* Client to send message to server
+    * Request server’s public key (done) and recipient's public key
+    * Encrypt using recipient’s public key
+    * Attach recipient, encrypt using the server public key and send it off to the server
+* Inter-server communication
+    * Set up sockets between servers
+
+
 
 ### 5/16/2020 Meeting
 __General updates:__

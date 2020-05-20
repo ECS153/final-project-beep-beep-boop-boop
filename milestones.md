@@ -10,7 +10,7 @@ __General updates:__
     * Action item: Figure out how to host and connect servers
 
 __Agenda:__
-* Film video for milestone 2
+* Film video for milestone 2. [Here](https://drive.google.com/file/d/11y0bv1eSWeUGkLgmSXikXMQiJ87neDG-/view?usp=sharing)
 
 __Notes:__ 
 * Deploy servers

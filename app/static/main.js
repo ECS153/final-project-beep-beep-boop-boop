@@ -1,5 +1,6 @@
-var socket = io.connect('http://' + document.domain + ':' + location.port);
+let socket = io.connect('http://' + document.domain + ':' + location.port);
 var server_public_key = null;
+var online_users = null;
 
 //TODO: Check if key exists then import
 
@@ -49,7 +50,7 @@ window.crypto.subtle.generateKey(
 .catch(function(err){
     console.error(err);
 });
-    
+
 // window.crypto.subtle.exportKey(
 //     "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 //     key.publicKey //can be a publicKey or privateKey, as long as extractable was true
@@ -62,28 +63,44 @@ window.crypto.subtle.generateKey(
 //     console.error(err);
 // });
 
-socket.on('connect', function(key) {
-    socket.emit('request_public_key', function() {
-        // TODO: still figuring out how to pick up public key sent from server
+
+socket.on('connect', function() {
+    console.log("sending join now")
+    socket.emit('join', {
+        username: "b",
+        public_key: ""
     })
-    
+
     var form = $('form' ).on( 'submit', function( e ) {
         e.preventDefault()
         let user_name = $( 'input.username' ).val()
         let user_input = $( 'input.message' ).val()
-        socket.emit( 'my event', {
-        user_name : user_name,
-        message : user_input
+
+        var usernames = []
+
+        for (var username in online_users)  // this is extracting username (or key) from the json
+            usernames.push(username)
+
+        socket.emit( 'message', {
+            sender : user_name,
+            recipient : username[0],
+            message : user_input
         } )
         $( 'input.message' ).val( '' ).focus()
     })
 });
 
-socket.on('public key', function(public_key){
-    console.log(public_key)
+socket.on('user list', function(user_list) {
+    console.log(user_list)
+    online_users = user_list
 });
 
-socket.on( 'my response', function( msg ) {
+socket.on('public key', function(data){
+    console.log(data)
+    server_public_key = data['public_key']
+});
+
+socket.on( 'message', function( msg ) {
     console.log( msg )
     if( typeof msg.user_name !== 'undefined' ) {
     $( 'h3' ).remove()

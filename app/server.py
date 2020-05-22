@@ -1,11 +1,16 @@
 
-from flask import Flask, render_template
-from flask_socketio import SocketIO, send, emit
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit, join_room, close_room, disconnect
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 import base64
 import os.path
+import json
+import settings
+
+
+# https://stackoverflow.com/questions/45918818/how-to-send-message-from-server-to-client-using-flask-socket-io
 
 
 # refer to https://pycryptodome.readthedocs.io/en/latest/src/examples.html#generate-public-key-and-private-key
@@ -14,14 +19,9 @@ import os.path
 # refer to https://flask-socketio.readthedocs.io/en/latest/
 # for flask socketio
 
-
-PATH_PRIVATE_KEY = "private.pem"
-PATH_PUBLIC_KEY = "public.pem"
-KEY_ENCODING_EXTENSION = "PEM"
-
 app = Flask(__name__)
-app.config['SECRET KEY'] = 'beepbeepboopboop2020beerflu'
-socketio = SocketIO(app)
+app.config['SECRET KEY'] = settings.APP_SECRET_KEY
+socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)
 
 
 # Encryption #
@@ -34,17 +34,17 @@ class Keys:  # since python doesn't support private, try to only use the method 
         if Keys.__singleton is not None:
             raise Exception("This class is a singleton!")
         else:
-            if os.path.exists(PATH_PRIVATE_KEY) and os.path.exists(PATH_PUBLIC_KEY):
-                self.__private_key = RSA.import_key(open(PATH_PRIVATE_KEY).read())
-                self.__public_key = RSA.import_key(open(PATH_PUBLIC_KEY).read())
+            if os.path.exists(settings.PATH_PRIVATE_KEY) and os.path.exists(settings.PATH_PUBLIC_KEY):
+                self.__private_key = RSA.import_key(open(settings.PATH_PRIVATE_KEY).read())
+                self.__public_key = RSA.import_key(open(settings.PATH_PUBLIC_KEY).read())
             else:  # create new set of keys
                 key = RSA.generate(2048)
-                self.__private_key = key.export_key(KEY_ENCODING_EXTENSION)
-                self.__public_key = key.publickey().export_key(KEY_ENCODING_EXTENSION)
-                outf = open(PATH_PRIVATE_KEY, "wb")
+                self.__private_key = key.export_key(settings.KEY_ENCODING_EXTENSION)
+                self.__public_key = key.publickey().export_key(settings.KEY_ENCODING_EXTENSION)
+                outf = open(settings.PATH_PRIVATE_KEY, "wb")
                 outf.write(self.__private_key)
                 outf.close()
-                outf = open(PATH_PUBLIC_KEY, "wb")
+                outf = open(settings.PATH_PUBLIC_KEY, "wb")
                 outf.write(self.__public_key)
                 outf.close()
 
@@ -94,26 +94,68 @@ def decrypt(encoded_data):
 
 
 # SocketIO #
+client = {}
+socket = {}  # username as key, sid as value
+socket_inv = {}  # sid as value, username as key
+
+
 @app.route('/')
 def sessions():
     return render_template('website.html')
 
 
-@socketio.on('request_public_key')
-def handle_public_key_request(methods=['GET', 'POST']):
-    # print(Keys.getPublicKey().export_key())
-    socketio.emit('public key', Keys.getPublicKey().export_key())
-    # send(Keys.getPublicKey().export_key())
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
 
 
-@socketio.on('my event')
-def handle_my_custom_event(json, methods=['GET', 'POST']):
-    print('received my event: ' + str(json))
-    socketio.emit('my response', json, callback=ack)
+@socketio.on('disconnect')
+def handle_disconnect():
+    if request.sid in socket_inv:  # disconnected from timeout
+        print("Client disconnected from timeout")
+        username = socket_inv.pop(request.sid)
+        socket.pop(username)
+        client.pop(username)
+    else:
+        print("Client disconnected by server")
 
 
-def ack(methods=['GET', 'POST']):
-    print('message was received!!!')
+@socketio.on('join')
+def assign_private_room(data, method=[]):
+    if data['username'] in socket:  # user already logged in somewhere, disable previous room
+        sid = socket.pop(data['username'])
+        socket_inv.pop(sid)
+        close_room(sid)
+
+    join_room(request.sid)
+    client[data['username']] = {
+        'nickname': data['username'],
+        'public_key': data['public_key']
+    }
+    socket[data['username']] = request.sid  # 'a' is username
+    socket_inv[request.sid] = data['username']
+    emit('user list', json.loads(json.dumps(client)))  # sends online user list
+    emit('public key', {"public_key": Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)})
+
+
+@socketio.on('update')
+def update_client(data):
+    client[data['username']]['nickname'] = data['nickname']
+
+
+@socketio.on('message')
+def handle_messages(data):
+    # json in this format:
+    # { 'message': '...encrypted...', 'recipient_username': 'username' }
+    emit('message', data, room=socket[data['recipient']])
+
+    # FIXME: when we do mixnet
+    # onion layer should goes as follows: ( ) indicates client encryption, < > indicates server encryption
+    # < < < < < ( message, sender ), recipient, this server >, mixnet server 2 >, mixnet server 1 >, this server >
+    # client should be given list of all the mixnet server IP and public key and create this route
+    #
+    # http request to recipient server, then each mixnet server peel off a layer
+    # when it comes back to this server, emit('message', data, room=socket[data['recipient']])
 
 
 def main():
@@ -129,7 +171,7 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    socketio.run(app, debug=True)
+    socketio.run(app, port=settings.PORT, debug=settings.DEBUG_MODE)
 
 
 if __name__ == '__main__':

@@ -102,8 +102,8 @@ socket.on('public key', function(data){
 
 socket.on( 'message', function( msg ) {
     console.log( msg )
-    if( typeof msg.user_name !== 'undefined' ) {
+    if( typeof msg.sender !== 'undefined' ) {
     $( 'h3' ).remove()
-    $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.user_name+'</b> '+msg.message+'</div>' )
+    $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.sender+'</b> '+msg.message+'</div>' )
     }
 });

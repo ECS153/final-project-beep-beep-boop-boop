@@ -8,6 +8,7 @@ import base64
 import os.path
 import json
 import settings
+import requests
 
 
 # https://stackoverflow.com/questions/45918818/how-to-send-message-from-server-to-client-using-flask-socket-io
@@ -104,6 +105,13 @@ def sessions():
     return render_template('website.html')
 
 
+@app.route('/sendmessage', methods=['POST'])
+def sendMessage():
+    print("Received message")
+    print(request.form['message'])
+    return "Message received"
+
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
@@ -177,7 +185,8 @@ def main():
     # print("***************************")
 
     socketio.run(app, port=settings.PORT, debug=settings.DEBUG_MODE)
-
+    r = request.post("64.227.56.166/sendmessage", data={'message': 'Hi there'})
+    print(r.text)
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,8 @@
 let socket = io.connect('http://' + document.domain + ':' + location.port);
+var username;
+var nickname;
+var public_key;
+var private_key;
 var server_public_key = null;
 var online_users = null;
 
@@ -46,6 +50,8 @@ window.crypto.subtle.generateKey(
     console.log(key);
     console.log(key.publicKey);
     console.log(key.privateKey);
+    public_key = key.public_key;
+    private_key = key.private_key;
 })
 .catch(function(err){
     console.error(err);
@@ -64,13 +70,10 @@ window.crypto.subtle.generateKey(
 // });
 
 
-socket.on('connect', function() {
-    console.log("sending join now")
-    socket.emit('join', {
-        username: "b",
-        public_key: ""
-    })
 
+document.getElementById("submit").addEventListener("click", handle_login);
+
+socket.on('connect', function() {
     var form = $('form' ).on( 'submit', function( e ) {
         e.preventDefault()
         let user_name = $( 'input.username' ).val()
@@ -92,12 +95,14 @@ socket.on('connect', function() {
 
 socket.on('user list', function(user_list) {
     console.log(user_list)
-    online_users = user_list
+    online_users = user_list;
+    update_users_list();
 });
 
 socket.on('public key', function(data){
-    console.log(data)
-    server_public_key = data['public_key']
+    console.log(data);
+    server_public_key = data['public_key'];
+    document.getElementById("login_view").classList.add("hidden");
 });
 
 socket.on( 'message', function( msg ) {
@@ -107,3 +112,47 @@ socket.on( 'message', function( msg ) {
     $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.sender+'</b> '+msg.message+'</div>' )
     }
 });
+
+
+function handle_login() {
+    console.log("hello");
+    login_card = document.getElementById("login_view").children[0];
+    username = login_card.children[1].value;
+    nickname = login_card.children[3].value;
+
+    if (nickname == "") {
+        nickname = username;
+    }
+    console.log(public_key);
+    if (username != "") {
+        document.getElementById("nickname").innerHTML = nickname;
+        color_strip = document.getElementsByClassName("color_strip")[0];
+        color_strip.classList.add("green");
+        color_strip.classList.remove("yellow");
+        socket.emit('join', {
+            username: username,
+            nickname: nickname,
+            public_key: ""
+        });
+    } else {
+        login_card.children[1].classList.add("error");
+        setTimeout(function(){
+            login_card.children[1].classList.remove('error');
+            //....and whatever else you need to do
+        }, 500);
+    }
+}
+
+
+function update_users_list() {
+    var usernames = []
+
+    for (var username in online_users)  // this is extracting username (or key) from the json
+        usernames.push(username)
+
+
+//    <div class="user" id="username2"><div class="flex-container"><img src="{{ url_for('static', filename = 'img/avatar.png') }}"><div class="username">username2</div><div class="notification">0</div></div><div class="divider"></div></div>
+}
+
+
+// Sockets

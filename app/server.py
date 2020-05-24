@@ -128,6 +128,7 @@ def assign_private_room(data, method=[]):
         close_room(sid)
 
     join_room(request.sid)
+    print(data);
     client[data['username']] = {
         'nickname': data['username'],
         'public_key': data['public_key']

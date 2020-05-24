@@ -4,21 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <title>Mixnet Messenger</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename = 'main.js') }}"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'website.css') }}">
 </head>
 
 <body>
-    <p>Mixnet Messenger</p>
+    <div class="flex-container" id="login_view">
+        <div class="card">
+            <img src="{{ url_for('static', filename = 'img/avatar.png') }}">
+            <input type="text" placeholder="username">
+            <div class="divider"></div>
+            <input type="text" placeholder="nickname">
+            <div class="divider"></div>
+            <div class="button" id="submit">Submit</div>
+        </div>
+    </div>
 
-    <h3 style='color: #ccc;font-size: 30px;'>No message yet..</h3>
-    <div class="message_holder"></div>
-    <form action="" method="POST">
-        <input type="text" class="username" placeholder="User Name"/>
-        <input type="text" class="message" placeholder="Messages"/>
-        <input type="submit"/>
-    </form>
+    <div class="flex-container">
+        <div class="side">
+            <header>
+                <div id="nickname">Hello!</div>
+            </header>
+            <div class="color_strip yellow"></div>
+            <div class="online_users">
+                <div class="user" id="username1">
+                    <div class="flex-container">
+                        <img src="{{ url_for('static', filename = 'img/avatar.png') }}">
+                        <div class="username">username1</div>
+                        <div class="notification">12</div>
+                    </div>
+                    <div class="divider"></div>
+                </div>
+
+                <div class="user" id="username2">
+                    <div class="flex-container">
+                        <img src="{{ url_for('static', filename = 'img/avatar.png') }}">
+                        <div class="username">username2</div>
+                        <div class="notification">0</div>
+                    </div>
+                    <div class="divider"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="chat">
+            <div class="placeholder">
+                <img src="{{ url_for('static', filename = 'img/robot.png') }}">
+                <div>Select a user on the left and start chatting!</div>
+            </div>
+        </div>
+    </div>
 </body>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename = 'main.js') }}"></script>
 </html>

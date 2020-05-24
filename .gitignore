@@ -9,3 +9,4 @@
 app/.DS_Store
 app/templates/.DS_Store
 *.pyc
+app/static/.DS_Store

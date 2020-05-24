@@ -1,5 +1,6 @@
 let socket = io.connect('http://' + document.domain + ':' + location.port);
 var username;
+var nickname_prev;
 var nickname;
 var keys;
 var server_public_key = null;
@@ -64,8 +65,46 @@ function decodeMessage(message){
     return decoder.decode(message)
 }
 
-document.getElementById("submit").addEventListener("click", handle_login);
 
+
+
+// Event Listeners
+document.getElementById("submit").addEventListener("click", handle_login);
+document.getElementById("login_view").children[0].children[1].addEventListener("keyup", function(e) {
+    if (e.keyCode == 13)
+        document.getElementById("login_view").children[0].children[3].focus();
+});
+document.getElementById("login_view").children[0].children[3].addEventListener("keyup", function(e) {
+    if (e.keyCode == 13)
+        handle_login();
+});
+document.getElementById("nickname").addEventListener("keydown", function(e) {
+    if (e.keyCode == 13) {
+        document.getElementById("nickname").blur();
+        e.preventDefault();
+        return false;
+    }
+});
+document.getElementById("nickname").addEventListener("paste", function(e) {  // disable pasting to prevent newline
+    e.preventDefault();
+    return false;
+});
+document.getElementById("nickname").addEventListener("focus", function(e) {
+    nickname_prev = nickname;
+});
+document.getElementById("nickname").addEventListener("blur", function(e) {
+    nickname = document.getElementById("nickname").innerHTML;
+    if (nickname != nickname_prev) {
+        socket.emit('update', {
+            username : username,
+            nickname : nickname
+        });
+    }
+});
+
+
+
+// Sockets
 socket.on('connect', function() {
     var form = $('form' ).on( 'submit', function( e ) {
         e.preventDefault()
@@ -81,15 +120,35 @@ socket.on('connect', function() {
             sender : user_name,
             recipient : username[0],
             message : user_input
-        } )
+        })
         $( 'input.message' ).val( '' ).focus()
     })
 });
 
 socket.on('user list', function(user_list) {
-    console.log(user_list)
     online_users = user_list;
-    update_users_list();
+    chat = document.getElementById("online_users");
+    html = '';
+
+    for (var user in online_users) { // this is extracting username (or key) from the json
+        if (user == username)
+            continue;
+
+        html += '<div class="user" id="';
+        html += user;
+        html += '"><div class="flex-container"><img src="static/img/avatar.png") }}"><div class="username">';
+        html += online_users[user]['nickname'];
+        html += '</div><div class="notification">0</div></div><div class="divider"></div></div>';
+    }
+
+    if (html == '') {
+        html = '<p>...looks like no one is online...</p>';
+    }
+
+    chat.innerHTML = html;
+    setTimeout(function(){
+        socket.emit('request user list');
+    }, 5000);
 });
 
 socket.on('public key', function(data){
@@ -98,7 +157,7 @@ socket.on('public key', function(data){
     document.getElementById("login_view").classList.add("hidden");
 });
 
-socket.on( 'message', function( msg ) {
+socket.on('message', function( msg ) {
     console.log( msg )
     if( typeof msg.sender !== 'undefined' ) {
     $( 'h3' ).remove()
@@ -107,24 +166,23 @@ socket.on( 'message', function( msg ) {
 });
 
 
+
+
 async function handle_login() {
-    console.log("hello");
     login_card = document.getElementById("login_view").children[0];
     username = login_card.children[1].value;
     nickname = login_card.children[3].value;
 
-    if (nickname == "") {
-        nickname = username;
-    }
-    console.log("Creating keys")
-    keys = await createKeys()
-    console.log(keys.publicKey);
-
     if (username != "") {
+        if (nickname == "")
+            nickname = username;
+
         document.getElementById("nickname").innerHTML = nickname;
         color_strip = document.getElementsByClassName("color_strip")[0];
         color_strip.classList.add("green");
         color_strip.classList.remove("yellow");
+        keys = await createKeys();
+        console.log(keys.publicKey);
         socket.emit('join', {
             username: username,
             nickname: nickname,
@@ -134,20 +192,9 @@ async function handle_login() {
         login_card.children[1].classList.add("error");
         setTimeout(function(){
             login_card.children[1].classList.remove('error');
-            //....and whatever else you need to do
         }, 500);
+        login_card.children[1].focus();
     }
-}
-
-
-function update_users_list() {
-    var usernames = []
-
-    for (var username in online_users)  // this is extracting username (or key) from the json
-        usernames.push(username)
-
-
-//    <div class="user" id="username2"><div class="flex-container"><img src="{{ url_for('static', filename = 'img/avatar.png') }}"><div class="username">username2</div><div class="notification">0</div></div><div class="divider"></div></div>
 }
 
 

@@ -12,7 +12,7 @@
     <div class="flex-container" id="login_view">
         <div class="card">
             <img src="{{ url_for('static', filename = 'img/avatar.png') }}">
-            <input type="text" placeholder="username">
+            <input type="text" placeholder="username" autofocus>
             <div class="divider"></div>
             <input type="text" placeholder="nickname">
             <div class="divider"></div>
@@ -23,32 +23,15 @@
     <div class="flex-container">
         <div class="side">
             <header>
-                <div id="nickname">Hello!</div>
+                <div id="nickname" contenteditable="true">Hello!</div>
             </header>
             <div class="color_strip yellow"></div>
-            <div class="online_users">
-                <div class="user" id="username1">
-                    <div class="flex-container">
-                        <img src="{{ url_for('static', filename = 'img/avatar.png') }}">
-                        <div class="username">username1</div>
-                        <div class="notification">12</div>
-                    </div>
-                    <div class="divider"></div>
-                </div>
-
-                <div class="user" id="username2">
-                    <div class="flex-container">
-                        <img src="{{ url_for('static', filename = 'img/avatar.png') }}">
-                        <div class="username">username2</div>
-                        <div class="notification">0</div>
-                    </div>
-                    <div class="divider"></div>
-                </div>
-
+            <div id="online_users">
+                <p>...looks like no one is online...</p>
             </div>
         </div>
 
-        <div class="chat">
+        <div id="chat">
             <div class="placeholder">
                 <img src="{{ url_for('static', filename = 'img/robot.png') }}">
                 <div>Select a user on the left and start chatting!</div>

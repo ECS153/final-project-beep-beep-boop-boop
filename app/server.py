@@ -121,27 +121,31 @@ def handle_disconnect():
 
 
 @socketio.on('join')
-def assign_private_room(data, method=[]):
+def assign_private_room(data):
     if data['username'] in socket:  # user already logged in somewhere, disable previous room
         sid = socket.pop(data['username'])
         socket_inv.pop(sid)
         close_room(sid)
 
     join_room(request.sid)
-    print(data);
     client[data['username']] = {
-        'nickname': data['username'],
+        'nickname': data['nickname'],
         'public_key': data['public_key']
     }
     socket[data['username']] = request.sid  # 'a' is username
     socket_inv[request.sid] = data['username']
-    emit('user list', json.loads(json.dumps(client)))  # sends online user list
+    distribute_user_list()
     emit('public key', {"public_key": Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)})
 
 
 @socketio.on('update')
 def update_client(data):
     client[data['username']]['nickname'] = data['nickname']
+
+
+@socketio.on('request user list')
+def distribute_user_list():
+    emit('user list', json.loads(json.dumps(client)))
 
 
 @socketio.on('message')

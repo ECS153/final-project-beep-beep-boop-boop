@@ -99,6 +99,18 @@ input:focus{
     width: 40px;
 }
 
+.side header #nickname {
+    outline: 0;
+    white-space: nowrap;
+    width: 30vw;
+    overflow: hidden;
+}
+
+.side #online_users p {
+    color: rgb(128,128,128);
+    text-align: center;
+}
+
 .side .user {
     cursor: pointer;
     height: 65px;
@@ -132,13 +144,14 @@ input:focus{
     margin: auto 10px;;
 }
 
-.chat {
+#chat {
     background: rgb(247,248,249);
     flex-grow: 1;
     height: 100vh;
 }
 
-.chat .placeholder {
+#chat .placeholder {
+    color: rgb(128,128,128);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -146,20 +159,21 @@ input:focus{
     height: 100vh;
 }
 
-.chat .placeholder img {
+#chat .placeholder img {
     height: 55%;
     max-height: 300px;
     width: auto;
     max-width: 320px;
 }
 
-.chat .placeholder div {
+#chat .placeholder div {
     padding: 10px 0 30px 0;
 }
 
 .color_strip {
     height: 4px;
     width: 100%;
+    margin-bottom: 10px;
 }
 
 .green {
@@ -178,6 +192,10 @@ input:focus{
 }
 
 .hidden {
+    display: none;
+}
+
+#chat .hidden {
     display: none;
 }
 

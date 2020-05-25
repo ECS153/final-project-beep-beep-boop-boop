@@ -7,6 +7,7 @@ var server_public_key = null;
 var online_users = null;
 var current_recipient;
 var message_history = {};
+var unread = {};
 
 
 // EXAMPLE USE OF FUNCTIONS
@@ -120,34 +121,19 @@ document.getElementById("chat_input").children[1].addEventListener("click", send
 socket.on('connect', function() {
 });
 
+socket.on('disconnect', function(){
+    login_view = document.getElementById("login_view");
+    login_view.children[0].children[6].innerHTML = '... Session expired (new login detected) ...';
+    login_view.children[0].children[6].classList.remove("invisible");
+    login_view.classList.remove("hidden")
+    color_strip = document.getElementsByClassName("color_strip")[0];
+    color_strip.classList.add("yellow");
+    color_strip.classList.remove("green");
+});
+
 socket.on('user list', function(user_list) {
     online_users = user_list;
-    html = '';
-
-    for (var user in online_users) {  // dynamically add user to user list on the side
-        if (user == username)
-            continue;
-
-        html += '<div class="user unselectable" id="';
-        html += user;
-        html += '"><div class="flex-row"><img src="static/img/avatar.png"><div class="username">';
-        html += online_users[user]['nickname'];
-        html += '</div><div class="notification">0</div></div><div class="divider"></div></div>';
-    }
-
-    if (html == '') {
-        html = '<p>...looks like no one is online...</p>';
-    }
-
-    user = document.getElementById("online_users");
-    user.innerHTML = html;
-
-    for (var user in online_users) {  // add event listener to each item after its being added to the html
-        entry = document.getElementById(user);
-
-        if (entry != null)
-            entry.addEventListener("click", initiate_chat);
-    }
+    update_user_list();
 
     setTimeout(function(){
         socket.emit('request user list');
@@ -157,7 +143,13 @@ socket.on('user list', function(user_list) {
 socket.on('public key', function(data){
     console.log(data);
     server_public_key = data['public_key'];
-    document.getElementById("login_view").classList.add("hidden");
+    login_view = document.getElementById("login_view");
+    login_view.classList.add("hidden");
+    login_view.children[0].children[5].classList.remove("lds-ellipsis");
+    login_view.children[0].children[5].addEventListener("click", handle_login);
+    color_strip = document.getElementsByClassName("color_strip")[0];
+    color_strip.classList.add("green");
+    color_strip.classList.remove("yellow");
 });
 
 socket.on('message', function(data) {
@@ -168,6 +160,13 @@ socket.on('message', function(data) {
 
     if (sender_id == current_recipient)
         load_messages();
+    else {
+        if (unread[sender_id] == null)
+            unread[sender_id] = 0;
+
+        unread[sender_id] += 1;
+        update_user_list();
+    }
 });
 
 
@@ -185,9 +184,6 @@ async function handle_login() {
             nickname = username;
 
         document.getElementById("nickname").innerHTML = nickname;
-        color_strip = document.getElementsByClassName("color_strip")[0];
-        color_strip.classList.add("green");
-        color_strip.classList.remove("yellow");
         keys = await createKeys();
         console.log(keys.publicKey);
         socket.emit('join', {
@@ -195,12 +191,57 @@ async function handle_login() {
             nickname: nickname,
             public_key: ""
         });
+        login_card.children[6].classList.add("invisible");
+        login_card.children[5].classList.add("lds-ellipsis");
+        login_card.children[5].removeEventListener("click", handle_login);  // prevent future clicks
+        setTimeout(function(){
+            if (login_card.children[5].classList.contains("lds-ellipsis")) {
+                login_card.children[5].classList.remove("lds-ellipsis");
+                login_card.children[5].addEventListener("click", handle_login);
+                login_card.children[6].innerHTML = '... an error has occurred. Please try again ...';
+                login_card.children[6].classList.remove("invisible");
+            }
+        }, 10000);
     } else {
         login_card.children[1].classList.add("error");
         setTimeout(function(){
             login_card.children[1].classList.remove('error');
         }, 500);
         login_card.children[1].focus();
+    }
+}
+
+function update_user_list() {
+    html = '';
+
+    for (var user in online_users) {  // dynamically add user to user list on the side
+        if (user == username)
+            continue;
+
+        html += '<div class="user unselectable" id="';
+        html += user;
+        html += '"><div class="flex-row"><img src="static/img/avatar.png"><div class="username">';
+        html += online_users[user]['nickname'];
+        html += '</div>';
+
+        if (unread[user] != null && unread[user] != 0)
+            html += '<div class="notification"></div>';
+
+        html += '</div><div class="divider"></div></div>';
+    }
+
+    if (html == '') {
+        html = '<p>...looks like no one is online...</p>';
+    }
+
+    user = document.getElementById("online_users");
+    user.innerHTML = html;
+
+    for (var user in online_users) {  // add event listener to each item after its being added to the html
+        entry = document.getElementById(user);
+
+        if (entry != null)
+            entry.addEventListener("click", initiate_chat);
     }
 }
 
@@ -220,6 +261,13 @@ function initiate_chat(event) {
     load_messages();
     chat.children[0].classList.add("hidden");  // hide placeholder
     chat.children[1].classList.remove("hidden");  // show actual chat area
+
+    if (parent.children[0].children.length == 3) {  // hide notification
+        console.log("hiding");
+        unread[parent.id] = 0;
+        parent.children[0].children[2].classList.add("hidden");
+    }
+
     textfield.focus();
 }
 

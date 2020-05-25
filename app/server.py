@@ -123,6 +123,7 @@ def handle_disconnect():
 @socketio.on('join')
 def assign_private_room(data):
     if data['username'] in socket:  # user already logged in somewhere, disable previous room
+        emit('disconnect', data, room=socket[data['username']])  # to let client know, actual disconnect will happen from timeout
         sid = socket.pop(data['username'])
         socket_inv.pop(sid)
         close_room(sid)

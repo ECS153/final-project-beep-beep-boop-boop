@@ -177,7 +177,7 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE)
+    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':

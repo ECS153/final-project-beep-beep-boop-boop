@@ -46,6 +46,7 @@ input {
     position: absolute;
     height: 100%;
     width: 100%;
+    z-index: 1;
 }
 
 .card {
@@ -235,6 +236,7 @@ input:focus{
     width: fit-content;
     max-width: 80%;
     position: relative;
+    z-index: 0;
 }
 
 #chat .chat_area .message.left {

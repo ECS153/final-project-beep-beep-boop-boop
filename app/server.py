@@ -152,6 +152,7 @@ def distribute_user_list():
 def handle_messages(data):
     # json in this format:
     # { 'message': '...encrypted...', 'recipient_username': 'username' }
+    print(data);
     emit('message', data, room=socket[data['recipient']])
 
     # FIXME: when we do mixnet
@@ -176,7 +177,7 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    socketio.run(app, port=settings.PORT, debug=settings.DEBUG_MODE)
+    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE)
 
 
 if __name__ == '__main__':

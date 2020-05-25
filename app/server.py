@@ -102,6 +102,9 @@ socket_inv = {}  # sid as value, username as key
 
 @app.route('/')
 def sessions():
+    r = requests.post('http://127.0.0.1:5000/sendmessage', data={'message': 'Hi there'})
+    print("Message posted")
+    print(r.text)
     return render_template('website.html')
 
 
@@ -185,8 +188,6 @@ def main():
     # print("***************************")
 
     socketio.run(app, port=settings.PORT, debug=settings.DEBUG_MODE)
-    r = request.post("64.227.56.166/sendmessage", data={'message': 'Hi there'})
-    print(r.text)
 
 if __name__ == '__main__':
     main()

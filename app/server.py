@@ -152,6 +152,7 @@ def distribute_user_list():
 def handle_messages(data):
     # json in this format:
     # { 'message': '...encrypted...', 'recipient_username': 'username' }
+    print(data);
     emit('message', data, room=socket[data['recipient']])
 
     # FIXME: when we do mixnet

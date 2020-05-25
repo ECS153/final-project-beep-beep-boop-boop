@@ -5,6 +5,8 @@ var nickname;
 var keys;
 var server_public_key = null;
 var online_users = null;
+var current_recipient;
+var message_history = {};
 
 
 // EXAMPLE USE OF FUNCTIONS
@@ -101,42 +103,34 @@ document.getElementById("nickname").addEventListener("blur", function(e) {
         });
     }
 });
+document.getElementById("chat_input").children[0].addEventListener("keydown", function(e) {
+    if (e.keyCode == 13) {
+        send_message();
+        e.preventDefault();
+        return false;
+    }
+});
+document.getElementById("chat_input").children[1].addEventListener("click", send_message);
+
+
 
 
 
 // Sockets
 socket.on('connect', function() {
-    var form = $('form' ).on( 'submit', function( e ) {
-        e.preventDefault()
-        let user_name = $( 'input.username' ).val()
-        let user_input = $( 'input.message' ).val()
-
-        var usernames = []
-
-        for (var username in online_users)  // this is extracting username (or key) from the json
-            usernames.push(username)
-
-        socket.emit( 'message', {
-            sender : user_name,
-            recipient : username[0],
-            message : user_input
-        })
-        $( 'input.message' ).val( '' ).focus()
-    })
 });
 
 socket.on('user list', function(user_list) {
     online_users = user_list;
-    chat = document.getElementById("online_users");
     html = '';
 
-    for (var user in online_users) { // this is extracting username (or key) from the json
+    for (var user in online_users) {  // dynamically add user to user list on the side
         if (user == username)
             continue;
 
-        html += '<div class="user" id="';
+        html += '<div class="user unselectable" id="';
         html += user;
-        html += '"><div class="flex-container"><img src="static/img/avatar.png") }}"><div class="username">';
+        html += '"><div class="flex-row"><img src="static/img/avatar.png"><div class="username">';
         html += online_users[user]['nickname'];
         html += '</div><div class="notification">0</div></div><div class="divider"></div></div>';
     }
@@ -145,7 +139,16 @@ socket.on('user list', function(user_list) {
         html = '<p>...looks like no one is online...</p>';
     }
 
-    chat.innerHTML = html;
+    user = document.getElementById("online_users");
+    user.innerHTML = html;
+
+    for (var user in online_users) {  // add event listener to each item after its being added to the html
+        entry = document.getElementById(user);
+
+        if (entry != null)
+            entry.addEventListener("click", initiate_chat);
+    }
+
     setTimeout(function(){
         socket.emit('request user list');
     }, 5000);
@@ -157,17 +160,21 @@ socket.on('public key', function(data){
     document.getElementById("login_view").classList.add("hidden");
 });
 
-socket.on('message', function( msg ) {
-    console.log( msg )
-    if( typeof msg.sender !== 'undefined' ) {
-    $( 'h3' ).remove()
-    $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.sender+'</b> '+msg.message+'</div>' )
-    }
+socket.on('message', function(data) {
+    // TODO: decrypt into sender / message
+    sender_id = data['sender'];
+    message = data['message'];
+    append_message_history(sender_id, sender_id, message);
+
+    if (sender_id == current_recipient)
+        load_messages();
 });
 
 
 
 
+
+// Handler functions
 async function handle_login() {
     login_card = document.getElementById("login_view").children[0];
     username = login_card.children[1].value;
@@ -197,5 +204,80 @@ async function handle_login() {
     }
 }
 
+function initiate_chat(event) {
+    parent = event.srcElement;
 
-// Sockets
+    while (parent.id == "")
+        parent = parent.parentElement;
+
+    chat = document.getElementById("chat");
+    recipient_nickname = chat.children[1].children[0].children[1];
+    textfield = document.getElementById("chat_input").children[0];
+
+    recipient_nickname.innerHTML = online_users[parent.id]['nickname'];
+    textfield.dataset.recipient = parent.id;  // stores recipient's username in input tag for sending later
+    current_recipient = parent.id;
+    load_messages();
+    chat.children[0].classList.add("hidden");  // hide placeholder
+    chat.children[1].classList.remove("hidden");  // show actual chat area
+    textfield.focus();
+}
+
+function send_message(){
+    textfield = document.getElementById("chat_input").children[0];
+
+    if (textfield.value != "") {
+        recipient_id = textfield.dataset.recipient;
+        append_message_history(recipient_id, username, textfield.value);
+        load_messages(recipient_id);
+//        TODO: encryption
+//        recipient_public_key = online_users[recipient]["public_key"]
+//        encrypts message and sender into a package with recipient_public_key
+//        encrypts the package and recipient with server keys
+//
+//        socket.emit('message', {
+//                recipient: recipient,
+//                package: ...
+//        })
+
+
+        socket.emit('message', {
+                sender: username,
+                recipient: recipient_id,
+                message: textfield.value
+        })
+        textfield.value = '';
+        textfield.focus();
+    }
+}
+
+function append_message_history(recipient_id, sender_id, message) {
+    // message history is indexed by the recipient_id. send_id is used to keep track of who
+    // send the message in this chat (you or the other person)
+    if (message_history[recipient_id] == null) {
+        message_history[recipient_id] = [];
+    }
+
+    message_history[recipient_id].push({
+        sender: sender_id,
+        message: message
+    });
+}
+
+
+function load_messages() {
+    chat_area = document.getElementById("chat").children[1].children[1];
+    chat_area.innerHTML = "";
+
+    for (i in message_history[current_recipient]) {
+        data = message_history[current_recipient][i];
+
+        if (data['sender'] == username)
+            chat_area.innerHTML += '<div class="message right">' + data['message'] + '</div>';
+        else
+            chat_area.innerHTML += '<div class="message left">' + data['message'] + '</div>';
+    }
+
+    if (chat_area.children.length != 0)
+        chat_area.lastChild.scrollIntoView();
+}

@@ -31,9 +31,9 @@ function createKeys(){
             publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
             hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
         },
-        false, //whether the key is extractable (i.e. can be used in exportKey)
+        true, //whether the key is extractable (i.e. can be used in exportKey)
         ["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
-    )
+    );
 }
 
 function encryptData(data, publicKey){
@@ -68,7 +68,14 @@ function decodeMessage(message){
     return decoder.decode(message)
 }
 
+async function exportPublicKey() {
+  const publicKey = await window.crypto.subtle.exportKey('spki', keys.publicKey);
 
+  let body = window.btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+  body = body.match(/.{1,64}/g).join('\n');
+
+  return `-----BEGIN PUBLIC KEY-----\n${body}\n-----END PUBLIC KEY-----`;
+}
 
 
 // Event Listeners
@@ -186,10 +193,13 @@ async function handle_login() {
         document.getElementById("nickname").innerHTML = nickname;
         keys = await createKeys();
         console.log(keys.publicKey);
+
+        public_key = await exportPublicKey();
+        console.log(public_key);
         socket.emit('join', {
             username: username,
             nickname: nickname,
-            public_key: ""
+            public_key: public_key
         });
         login_card.children[6].classList.add("invisible");
         login_card.children[5].classList.add("lds-ellipsis");

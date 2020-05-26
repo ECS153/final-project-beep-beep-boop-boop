@@ -381,6 +381,7 @@ input:focus{
     color: #888;
 }
 
+/* https://loading.io/css/ */
 .lds-ellipsis div {
     position: absolute;
     top: 11px;
@@ -438,6 +439,7 @@ input:focus{
     }
 }
 
+/* https://www.w3schools.com/howto/howto_css_shake_image.asp */
 @keyframes shake {
     0% { transform: translate(1px, 1px) rotate(0deg); }
     10% { transform: translate(-1px, -2px) rotate(-1deg); }

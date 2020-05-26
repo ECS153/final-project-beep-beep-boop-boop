@@ -15,28 +15,15 @@ async function testEncryptDecrypt(){
     console.log("Creating keys")
     keys = await createKeys()
     message = "hi bby"
-    encoded = await encodeMessage(message)
-    encrypted = await encryptData(encoded, keys.publicKey)
-    decrypted = await decryptData(encrypted, keys.privateKey)
-    decoded = await decodeMessage(decrypted)
+    encoded = await encode(message)
+    encrypted = await encrypt(encoded, keys.publicKey)
+    decrypted = await decrypt(encrypted, keys.privateKey)
+    decoded = await decode(decrypted)
     console.log("Printing decrypted message")
     console.log(decoded)
 }
 
-function createKeys(){
-    return crypto.subtle.generateKey(
-        {
-            name: "RSA-OAEP",
-            modulusLength: 2048, //can be 1024, 2048, or 4096
-            publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-            hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
-        },
-        false, //whether the key is extractable (i.e. can be used in exportKey)
-        ["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
-    )
-}
-
-function encryptData(data, publicKey){
+function encrypt(data, publicKey){
     return crypto.subtle.encrypt(
         {
             name: "RSA-OAEP",
@@ -47,23 +34,23 @@ function encryptData(data, publicKey){
     )
 }
 
-function decryptData(data, privateKey){
+function decrypt(data, privateKey){
     return crypto.subtle.decrypt(
         {
             name: "RSA-OAEP",
             //label: Uint8Array([...]) //optional
         },
-        privateKey, //from generateKey or importKey above
+        privateKey,
         data //ArrayBuffer of the data
     )
 }
 
-function encodeMessage(message){
+function encode(message){
     let encoder = new TextEncoder();
     return encoder.encode(message);
 }
 
-function decodeMessage(message){
+function decode(message){
     let decoder = new TextDecoder();
     return decoder.decode(message)
 }
@@ -118,9 +105,6 @@ document.getElementById("chat_input").children[1].addEventListener("click", send
 
 
 // Sockets
-socket.on('connect', function() {
-});
-
 socket.on('disconnect', function(){
     login_view = document.getElementById("login_view");
     login_view.children[0].children[6].innerHTML = '... Session expired (new login detected) ...';
@@ -140,9 +124,7 @@ socket.on('user list', function(user_list) {
     }, 5000);
 });
 
-socket.on('public key', function(data){
-    console.log(data);
-    server_public_key = data['public_key'];
+socket.on('connected', function() {
     login_view = document.getElementById("login_view");
     login_view.classList.add("hidden");
     login_view.children[0].children[5].classList.remove("lds-ellipsis");
@@ -152,29 +134,34 @@ socket.on('public key', function(data){
     color_strip.classList.remove("yellow");
 });
 
+socket.on('public key', function(data){
+    server_public_key = data['public_key'];
+});
+
 socket.on('message', function(data) {
-    // TODO: decrypt into sender / message
-    sender_id = data['sender'];
-    message = data['message'];
-    append_message_history(sender_id, sender_id, message);
+    decrypt(data, keys.privateKey)
+    .then (function (decryptedData) {
+        decoded = decode(decryptedData);
+        json = JSON.parse(decoded);
+        append_message_history(json['sender'], json['sender'], json['message']);
 
-    if (sender_id == current_recipient)
-        load_messages();
-    else {
-        if (unread[sender_id] == null)
-            unread[sender_id] = 0;
+        if (json['sender'] == current_recipient)
+            load_messages();
+        else {
+            if (unread[json['sender']] == null)
+                unread[json['sender']] = 0;
 
-        unread[sender_id] += 1;
-        update_user_list();
-    }
+            unread[json['sender']] += 1;
+            update_user_list();
+        }
+    })
 });
 
 
 
 
-
 // Handler functions
-async function handle_login() {
+function handle_login() {
     login_card = document.getElementById("login_view").children[0];
     username = login_card.children[1].value;
     nickname = login_card.children[3].value;
@@ -183,18 +170,32 @@ async function handle_login() {
         if (nickname == "")
             nickname = username;
 
-        document.getElementById("nickname").innerHTML = nickname;
-        keys = await createKeys();
-        console.log(keys.publicKey);
-        socket.emit('join', {
-            username: username,
-            nickname: nickname,
-            public_key: ""
+        crypto.subtle.generateKey(  // GENERATING RSA KEY-PAIR
+            {
+                name: "RSA-OAEP",
+                modulusLength: 2048, //can be 1024, 2048, or 4096
+                publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+                hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+            },
+            true, //whether the key is extractable (i.e. can be used in exportKey)
+            ["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
+        ).then(function(generated_keys) {
+            keys = generated_keys;
+            return window.crypto.subtle.exportKey('jwk', keys.publicKey);
+        }).then (function(public_key){
+            socket.emit('join', {
+                username: username,
+                nickname: nickname,
+                public_key: public_key
+            });
         });
+
+        document.getElementById("nickname").innerHTML = nickname;
         login_card.children[6].classList.add("invisible");
         login_card.children[5].classList.add("lds-ellipsis");
         login_card.children[5].removeEventListener("click", handle_login);  // prevent future clicks
-        setTimeout(function(){
+
+        setTimeout(function(){  // login request probably timed out, allow user to try again
             if (login_card.children[5].classList.contains("lds-ellipsis")) {
                 login_card.children[5].classList.remove("lds-ellipsis");
                 login_card.children[5].addEventListener("click", handle_login);
@@ -263,7 +264,6 @@ function initiate_chat(event) {
     chat.children[1].classList.remove("hidden");  // show actual chat area
 
     if (parent.children[0].children.length == 3) {  // hide notification
-        console.log("hiding");
         unread[parent.id] = 0;
         parent.children[0].children[2].classList.add("hidden");
     }
@@ -278,24 +278,27 @@ function send_message(){
         recipient_id = textfield.dataset.recipient;
         append_message_history(recipient_id, username, textfield.value);
         load_messages(recipient_id);
-//        TODO: encryption
-//        recipient_public_key = online_users[recipient]["public_key"]
-//        encrypts message and sender into a package with recipient_public_key
-//        encrypts the package and recipient with server keys
-//
-//        socket.emit('message', {
-//                recipient: recipient,
-//                package: ...
-//        })
 
-
-        socket.emit('message', {
+        crypto.subtle.importKey('jwk', online_users[recipient_id]['public_key'], { // import recipient's public key
+            name: 'RSA-OAEP',
+            hash: {name: 'SHA-256'}
+        }, true, ['encrypt'])
+        .then (function (importedKey){  // encode it (UTF-8), then encrypt it
+            encoded = encode(JSON.stringify({
                 sender: username,
-                recipient: recipient_id,
                 message: textfield.value
-        })
-        textfield.value = '';
-        textfield.focus();
+            }));
+            encrypt(encoded, importedKey)
+            .then (function (encrypted) {
+                socket.emit('message', {
+                    encrypted: encrypted,
+                    recipient: recipient_id
+                })
+                textfield.value = '';
+                textfield.focus();
+            });
+        });
+
     }
 }
 

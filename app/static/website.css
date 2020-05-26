@@ -9,9 +9,34 @@ input {
     font-family: Source Sans Pro;
 }
 
-.flex-container {
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: inherit;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.flex-row {
     display: flex;
     flex-direction: row;
+}
+
+.flex-center {
     justify-content: center;
     align-items: center;
 }
@@ -21,6 +46,7 @@ input {
     position: absolute;
     height: 100%;
     width: 100%;
+    z-index: 1;
 }
 
 .card {
@@ -63,13 +89,22 @@ input {
     margin-top: 10px;
 }
 
-.button {
+.card .button {
     background: rgb(59, 220, 124);
     border: 2px solid rgb(229,229,229);
     border-radius: 15px;
     font-size: 14px;
     cursor: pointer;
     padding: 5px 7px;
+    width: 50px;
+    text-align: center;
+    transition: background 1s;
+}
+
+.card .error_message {
+    font-size: 11px;
+    color: red;
+    margin-top: 20px;
 }
 
 input:focus{
@@ -122,7 +157,7 @@ input:focus{
 
 .side .user img {
     border-radius: 50%;
-    padding: 10px 16px;
+    margin: 10px 16px;
     height: 48px;
     width: 48px;
 }
@@ -140,17 +175,19 @@ input:focus{
     font-weight: light;
     padding: 3px 3px;
     text-align: center;
-    width: 15px;
+    height: 5px;
+    width: 5px;
     margin: auto 10px;;
 }
 
 #chat {
-    background: rgb(247,248,249);
+    background: rgb(240,240,240);
     flex-grow: 1;
     height: 100vh;
 }
 
 #chat .placeholder {
+    background: rgb(247,248,249);
     color: rgb(128,128,128);
     display: flex;
     flex-direction: column;
@@ -168,6 +205,131 @@ input:focus{
 
 #chat .placeholder div {
     padding: 10px 0 30px 0;
+}
+
+#chat header img {
+    border-radius: 50%;
+    margin: 20px 16px 0px 16px;
+    height: 48px;
+    width: 48px;
+}
+
+#chat header div {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#chat .chat_area {
+    background: rgb(252,252,252);
+    flex-grow: 1;
+    width: 100%;
+    overflow-y: scroll;
+}
+
+#chat .chat_area .message {
+    display: inline-block;
+    border: 1px solid white;
+    border-radius: 15px;
+    font-size: 14px;
+    margin: 5px 10px;
+    padding: 8px 15px;
+    width: fit-content;
+    max-width: 80%;
+    position: relative;
+    z-index: 0;
+}
+
+#chat .chat_area .message.left {
+    background: rgb(225,225,231);
+}
+
+#chat .chat_area .message.left:before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: 0;
+    left: -7px;
+    height: 20px;
+    width: 20px;
+    background: rgb(225,225,231);
+    border-bottom-right-radius: 15px;
+}
+
+#chat .chat_area .message.left:after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: -10px;
+    width: 10px;
+    height: 20px;
+    background: rgb(252,252,252);
+    border-bottom-right-radius: 10px;
+}
+
+#chat .chat_area .message.right {
+    background: rgb(0, 170, 219);
+    color: white;
+    margin-left: auto;
+    text-align: right;
+}
+
+#chat .chat_area .message.right:before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: 0;
+    right: -8px;
+    height: 20px;
+    width: 20px;
+    background: rgb(0, 170, 219);
+    background-attachment: fixed;
+    border-bottom-left-radius: 15px;
+}
+
+#chat .chat_area .message.right:after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    right: -10px;
+    width: 10px;
+    height: 20px;
+    background: rgb(252,252,252);
+    border-bottom-left-radius: 10px;
+}
+
+#chat #chat_input {
+    height: 50px;
+    width: 100%;
+}
+
+#chat #chat_input input {
+    border: 2px solid rgb(229,229,229);
+    border-radius: 15px;
+    margin-left: 20px;
+    padding: 5px 10px;
+    flex-grow: 1;
+    outline: none;
+    font-size: 14px;
+}
+
+#chat #chat_input .button {
+    background: rgb(59, 200, 124);
+    border-radius: 20px;
+    border: 2px solid rgb(225,225,225);
+    width: 50px;
+    margin: 0 20px;
+    padding: 5px 0;
+    align-self: center;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+}
+
+#chat #chat_input .button:hover {
+    background: rgb(26,162,96);
 }
 
 .color_strip {
@@ -191,6 +353,19 @@ input:focus{
     margin: 0 auto;
 }
 
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
 .hidden {
     display: none;
 }
@@ -199,16 +374,80 @@ input:focus{
     display: none;
 }
 
+.card .button.lds-ellipsis {
+    position: relative;
+    cursor: not-allowed;
+    background: #888;
+    color: #888;
+}
+
+.lds-ellipsis div {
+    position: absolute;
+    top: 11px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: white;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.lds-ellipsis div:nth-child(1) {
+    left: 12px;
+    animation: lds-ellipsis1 0.6s infinite;
+}
+
+.lds-ellipsis div:nth-child(2) {
+    left: 12px;
+    animation: lds-ellipsis2 0.6s infinite;
+}
+
+.lds-ellipsis div:nth-child(3) {
+    left: 30px;
+    animation: lds-ellipsis2 0.6s infinite;
+}
+
+.lds-ellipsis div:nth-child(4) {
+    left: 48px;
+    animation: lds-ellipsis3 0.6s infinite;
+}
+
+@keyframes lds-ellipsis1 {
+    0% {
+    transform: scale(0);
+    }
+    100% {
+    transform: scale(1);
+    }
+}
+
+@keyframes lds-ellipsis3 {
+    0% {
+    transform: scale(1);
+    }
+    100% {
+    transform: scale(0);
+    }
+}
+
+@keyframes lds-ellipsis2 {
+    0% {
+    transform: translate(0, 0);
+    }
+    100% {
+    transform: translate(18px, 0);
+    }
+}
+
 @keyframes shake {
-  0% { transform: translate(1px, 1px) rotate(0deg); }
-  10% { transform: translate(-1px, -2px) rotate(-1deg); }
-  20% { transform: translate(-3px, 0px) rotate(1deg); }
-  30% { transform: translate(3px, 2px) rotate(0deg); }
-  40% { transform: translate(1px, -1px) rotate(1deg); }
-  50% { transform: translate(-1px, 2px) rotate(-1deg); }
-  60% { transform: translate(-3px, 1px) rotate(0deg); }
-  70% { transform: translate(3px, 1px) rotate(-1deg); }
-  80% { transform: translate(-1px, -1px) rotate(1deg); }
-  90% { transform: translate(1px, 2px) rotate(0deg); }
-  100% { transform: translate(1px, -2px) rotate(-1deg); }
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
 }

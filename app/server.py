@@ -25,6 +25,9 @@ socket_inv = {}  # sid as value, username as key
 def sessions():
     return render_template('website.html')
 
+@app.route('/getServerPublicKey', methods=['GET'])
+def get_public_key():
+    return RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
 
 @socketio.on('connect')
 def handle_connect():
@@ -74,6 +77,8 @@ def distribute_user_list():
 
 @socketio.on('message')
 def handle_messages(data):
+    r = requests.get('https://64.227.56.166/getServerPublicKey', verify=False)
+    print(r.text)
     emit('message', data['encrypted'], room=socket[data['recipient']])
 
     # FIXME: when we do mixnet
@@ -99,7 +104,7 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
+    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':

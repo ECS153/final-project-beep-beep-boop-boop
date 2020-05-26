@@ -1,4 +1,4 @@
-let socket = io.connect('https://' + document.domain + ':' + location.port);
+let socket = io.connect('https://' + document.domain + ':' + location.port, {secure: true});
 var username;
 var nickname_prev;
 var nickname;

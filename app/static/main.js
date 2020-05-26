@@ -1,6 +1,7 @@
 // let socket = io.connect('https://' + document.domain + ':' + location.port, {secure: true});
 // let socket = io.connect('https://64.227.56.166', {secure: true});
-let socket = io.connect()
+// let socket = io.connect()
+let socket = io()
 var username;
 var nickname_prev;
 var nickname;

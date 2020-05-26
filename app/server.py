@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, emit, join_room, close_room, disconnect
 import json
 import RSA_script
 import settings
+import requests
 
 
 # https://stackoverflow.com/questions/45918818/how-to-send-message-from-server-to-client-using-flask-socket-io

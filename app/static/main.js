@@ -18,8 +18,10 @@ async function testEncryptDecrypt(){
     console.log("Creating keys")
     keys = await createKeys()
     message = "hi bby"
+    exported = await exportPublicKey(keys)
+    imported = await importPemKey(exported)
     encoded = await encode(message)
-    encrypted = await encrypt(encoded, keys.publicKey)
+    encrypted = await encrypt(encoded, imported)
     decrypted = await decrypt(encrypted, keys.privateKey)
     decoded = await decode(decrypted)
     console.log("Printing decrypted message")
@@ -58,8 +60,59 @@ function decode(message){
     return decoder.decode(message)
 }
 
+async function exportPublicKey(keys) {
+  const publicKey = await window.crypto.subtle.exportKey('spki', keys.publicKey);
 
+  let body = window.btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+  body = body.match(/.{1,64}/g).join('\n');
 
+  return `-----BEGIN PUBLIC KEY-----\n${body}\n-----END PUBLIC KEY-----`;
+}
+
+async function importPublicKey(publicKey){
+    return crypto.subtle.importKey(
+        "spki", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+        publicKey,
+        {   //these are the algorithm options
+            name: "RSA-OAEP",
+            hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+        },
+        true, //whether the key is extractable (i.e. can be used in exportKey)
+        ["encrypt"] //"encrypt" or "wrapKey" for public key import or
+                    //"decrypt" or "unwrapKey" for private key imports
+    )
+}
+
+async function importPemKey(pemFile){
+    // fetch the part of the PEM string between header and footer
+    pem = String(pemFile)
+    pemHeader = "-----BEGIN PUBLIC KEY-----";
+    pemFooter = "-----END PUBLIC KEY-----";
+    pemKey = pem.substring(pemHeader.length, pem.length - pemFooter.length);
+    decoded = window.atob(pemKey);
+    arrBuff = str2ab(decoded);
+
+    return window.crypto.subtle.importKey(
+        "spki", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+        arrBuff,
+        {   //these are the algorithm options
+            name: "RSA-OAEP",
+            hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+        },
+        true, //whether the key is extractable (i.e. can be used in exportKey)
+        ["encrypt"] //"encrypt" or "wrapKey" for public key import or
+                    //"decrypt" or "unwrapKey" for private key imports
+    )
+}
+  
+function str2ab(str) {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
 
 // Event Listeners
 document.getElementById("submit").addEventListener("click", handle_login);
@@ -173,6 +226,12 @@ function handle_login() {
         if (nickname == "")
             nickname = username;
 
+//         keys = await createKeys();
+//         public_key = await exportPublicKey(keys);
+//         socket.emit('join', {
+//             username: username,
+//             nickname: nickname,
+//             public_key: public_key
         crypto.subtle.generateKey(  // GENERATING RSA KEY-PAIR
             {
                 name: "RSA-OAEP",

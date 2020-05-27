@@ -51,6 +51,11 @@ def assign_private_room(data):
         close_room(sid)
 
     join_room(request.sid)
+    print(data)
+    temp = RSA.import_key(data['public_key'])
+    print(temp);
+    temp2 = temp.export_key(settings.KEY_ENCODING_EXTENSION);
+    print(temp2);
     client[data['username']] = {
         'nickname': data['nickname'],
         'public_key': data['public_key']

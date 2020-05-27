@@ -32,16 +32,20 @@ def get_public_key():
 
 @app.route('/forwardMessage', methods=['POST'])
 def forward_message():
-    data = request.json
-    decrypted_data = RSA_script.decrypt(data['encrypted'])
+    data = request.get_data()
+    # print("Encrypted Message After Post:")
+    # print(data)
+    decrypted_data = RSA_script.decrypt(data)
+    # print(decrypted_data)
     recipient = decrypted_data['recipient']
     payload = decrypted_data['encrypted']
-    isIp = re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', recipient)
-    if (isIp != None):
-        url = 'https://'+ recipient +'/forwardMessage'
-        requests.post(url, json=payload)
-    else:
-        emit('message', decrypted_data, room=socket['recipient'])
+    # isIp = re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', recipient)
+    # if (isIp != None):
+    url = 'https://'+ recipient +'/forwardMessage'
+    requests.post(url, data=payload, verify=False)
+    # else:
+    #     emit('message', decrypted_data, room=socket['recipient'])
+
 
     return 'Success'
 
@@ -93,11 +97,16 @@ def distribute_user_list():
 
 @socketio.on('message')
 def handle_messages(data):
-    data['recipient'] = server_list.SERVERS[1]
+    # print(data['recipient'])
+    # print("Encrypted Message Before Post:")
+    # print(data['encrypted'])
+    # print("Decrypted:")
+    # print(RSA_script.decrypt(data['encrypted']))
+    data['recipient'] = server_list.SERVERS[0]
     url = 'https://'+ data['recipient'] +'/forwardMessage'
-    payload = {'data': data['encrypted']}
-    r = requests.post(url, json=payload)
-    print(r)
+    payload = data['encrypted']
+    r = requests.post(url, data=payload, verify=False)
+    # print(r.text)
     
     # emit('message', data['encrypted'], room=socket[data['recipient']])
     

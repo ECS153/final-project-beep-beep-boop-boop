@@ -77,9 +77,13 @@ def distribute_user_list():
 
 @socketio.on('message')
 def handle_messages(data):
-    r = requests.get('https://64.227.56.166/getServerPublicKey', verify=False)
-    print(r.text)
+    # r = requests.get('https://64.227.56.166/getServerPublicKey', verify=False)
+    # print(r.text)
+    # print(data)
+    # print(data['recipient'])
+    
     emit('message', data['encrypted'], room=socket[data['recipient']])
+    
 
     # FIXME: when we do mixnet
     # onion layer should goes as follows: ( ) indicates client encryption, < > indicates server encryption

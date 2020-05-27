@@ -14,11 +14,11 @@ __General updates:__
     * Action item: Finalize data forwarding
 
 __Agenda:__
-    * Troubleshoot bugs
-    * Film video for milestone 3
-    
+* Troubleshoot bugs
+* Film video for milestone 3
+
 __Notes:__
-    * Ask Sam if it would be a better idea to ditch pyCryptodome and instead make a separate JS script on the server so server keys are generated through Web Crypto as well. There shouldn’t be any more conflict that way. We spent 4 days on this already.
+* Ask Sam if it would be a better idea to ditch pyCryptodome and instead make a separate JS script on the server so server keys are generated through Web Crypto as well. There shouldn’t be any more conflict that way. We spent 4 days on this already.
 
 
 

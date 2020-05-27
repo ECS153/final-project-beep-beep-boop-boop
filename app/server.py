@@ -3,8 +3,10 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, close_room, disconnect
 import json
 import RSA_script
+import server_list
 import settings
-
+import requests
+import re
 
 # https://stackoverflow.com/questions/45918818/how-to-send-message-from-server-to-client-using-flask-socket-io
 
@@ -24,6 +26,28 @@ socket_inv = {}  # sid as value, username as key
 def sessions():
     return render_template('website.html')
 
+@app.route('/getServerPublicKey', methods=['GET'])
+def get_public_key():
+    return RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
+
+@app.route('/forwardMessage', methods=['POST'])
+def forward_message():
+    data = request.get_data()
+    # print("Encrypted Message After Post:")
+    # print(data)
+    decrypted_data = RSA_script.decrypt(data)
+    # print(decrypted_data)
+    recipient = decrypted_data['recipient']
+    payload = decrypted_data['encrypted']
+    # isIp = re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', recipient)
+    # if (isIp != None):
+    url = 'https://'+ recipient +'/forwardMessage'
+    requests.post(url, data=payload, verify=False)
+    # else:
+    #     emit('message', decrypted_data, room=socket['recipient'])
+
+
+    return 'Success'
 
 @socketio.on('connect')
 def handle_connect():
@@ -82,7 +106,19 @@ def distribute_user_list():
 
 @socketio.on('message')
 def handle_messages(data):
-    emit('message', data['encrypted'], room=socket[data['recipient']])
+    # print(data['recipient'])
+    # print("Encrypted Message Before Post:")
+    # print(data['encrypted'])
+    # print("Decrypted:")
+    # print(RSA_script.decrypt(data['encrypted']))
+    data['recipient'] = server_list.SERVERS[0]
+    url = 'https://'+ data['recipient'] +'/forwardMessage'
+    payload = data['encrypted']
+    r = requests.post(url, data=payload, verify=False)
+    # print(r.text)
+    
+    # emit('message', data['encrypted'], room=socket[data['recipient']])
+    
 
     # FIXME: when we do mixnet
     # onion layer should goes as follows: ( ) indicates client encryption, < > indicates server encryption
@@ -107,8 +143,7 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    # socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
-    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE)
+    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ async function importPublicKey(publicKey){
 
 async function importPemKey(pemFile){
     // fetch the part of the PEM string between header and footer
-    pem = String(pemFile)
+    pem = String.fromCharCode.apply(null, new Uint8Array(pemFile))
     pemHeader = "-----BEGIN PUBLIC KEY-----";
     pemFooter = "-----END PUBLIC KEY-----";
     pemKey = pem.substring(pemHeader.length, pem.length - pemFooter.length);
@@ -191,15 +191,13 @@ socket.on('connected', function() {
 });
 
 socket.on('public key', function(data){
-    console.log(data);
+    // @Ryan import server public key
 
-//     @Ryan import server public key
-//
-//    importPemKey(data)
-//    .then (function(converted_key) {
-//        server_public_key = converted_key;
-//        console.log(server_public_key);
-//    });
+   importPemKey(data)
+   .then (function(converted_key) {
+       server_public_key = converted_key;
+       console.log(server_public_key);
+   });
 });
 
 socket.on('message', function(data) {

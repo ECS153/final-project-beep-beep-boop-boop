@@ -3,9 +3,10 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, close_room, disconnect
 import json
 import RSA_script
+import server_list
 import settings
 import requests
-
+import re
 
 # https://stackoverflow.com/questions/45918818/how-to-send-message-from-server-to-client-using-flask-socket-io
 
@@ -28,6 +29,21 @@ def sessions():
 @app.route('/getServerPublicKey', methods=['GET'])
 def get_public_key():
     return RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
+
+@app.route('/forwardMessage', methods=['POST'])
+def forward_message():
+    data = request.json
+    decrypted_data = RSA_script.decrypt(data['encrypted'])
+    recipient = decrypted_data['recipient']
+    payload = decrypted_data['encrypted']
+    isIp = re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', recipient)
+    if (isIp != None):
+        url = 'https://'+ recipient +'/forwardMessage'
+        requests.post(url, json=payload)
+    else:
+        emit('message', decrypted_data, room=socket['recipient'])
+
+    return 'Success'
 
 @socketio.on('connect')
 def handle_connect():
@@ -77,12 +93,13 @@ def distribute_user_list():
 
 @socketio.on('message')
 def handle_messages(data):
-    # r = requests.get('https://64.227.56.166/getServerPublicKey', verify=False)
-    # print(r.text)
-    # print(data)
-    # print(data['recipient'])
+    data['recipient'] = server_list.SERVERS[1]
+    url = 'https://'+ data['recipient'] +'/forwardMessage'
+    payload = {'data': data['encrypted']}
+    r = requests.post(url, json=payload)
+    print(r)
     
-    emit('message', data['encrypted'], room=socket[data['recipient']])
+    # emit('message', data['encrypted'], room=socket[data['recipient']])
     
 
     # FIXME: when we do mixnet

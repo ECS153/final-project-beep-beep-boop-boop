@@ -28,7 +28,7 @@ def sessions():
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
-    emit('public key', {"public_key": RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)})
+    emit('public key', RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION))
 
 
 @socketio.on('disconnect')
@@ -44,6 +44,14 @@ def handle_disconnect():
 
 @socketio.on('join')
 def assign_private_room(data):
+    # @Ryan
+    if data['username'] is None:
+        print(data)
+        decrypted = RSA_script.decrypt(data)
+        temp = json.loads(decrypted)
+        print(temp) # should see 'username', 'nickname', 'public key'
+    # don't touch the ones below. Its what the server process after the server decrypts
+
     if data['username'] in socket:  # user already logged in somewhere, disable previous room
         emit('disconnect', data, room=socket[data['username']])  # to let client know, actual disconnect will happen from timeout
         sid = socket.pop(data['username'])
@@ -51,15 +59,11 @@ def assign_private_room(data):
         close_room(sid)
 
     join_room(request.sid)
-    print(data)
-    temp = RSA.import_key(data['public_key'])
-    print(temp);
-    temp2 = temp.export_key(settings.KEY_ENCODING_EXTENSION);
-    print(temp2);
     client[data['username']] = {
         'nickname': data['nickname'],
         'public_key': data['public_key']
     }
+
     socket[data['username']] = request.sid  # 'a' is username
     socket_inv[request.sid] = data['username']
     distribute_user_list()
@@ -103,7 +107,8 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
+    # socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
+    socketio.run(app, host='0.0.0.0',  port=settings.PORT, debug=settings.DEBUG_MODE)
 
 
 if __name__ == '__main__':

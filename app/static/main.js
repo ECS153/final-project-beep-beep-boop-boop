@@ -191,7 +191,15 @@ socket.on('connected', function() {
 });
 
 socket.on('public key', function(data){
-    server_public_key = data['public_key'];
+    console.log(data);
+
+//     @Ryan import server public key
+//
+//    importPemKey(data)
+//    .then (function(converted_key) {
+//        server_public_key = converted_key;
+//        console.log(server_public_key);
+//    });
 });
 
 socket.on('message', function(data) {
@@ -226,12 +234,6 @@ function handle_login() {
         if (nickname == "")
             nickname = username;
 
-//         keys = await createKeys();
-//         public_key = await exportPublicKey(keys);
-//         socket.emit('join', {
-//             username: username,
-//             nickname: nickname,
-//             public_key: public_key
         crypto.subtle.generateKey(  // GENERATING RSA KEY-PAIR
             {
                 name: "RSA-OAEP",
@@ -245,6 +247,20 @@ function handle_login() {
             keys = generated_keys;
             return window.crypto.subtle.exportKey('jwk', keys.publicKey);
         }).then (function(public_key){
+
+//             @Ryan encrypt with server key
+//             This is the one you will use: (comment out the one on the bottom)
+//
+//            encoded = encode(JSON.stringify({
+//                username: username,
+//                nickname: nickname,
+//                public_key: public_key
+//            }));
+//            encrypt(encoded, server_public_key)
+//            .then (function(encrypted) {
+//                socket.emit('join', encrypted);
+//            });
+
             socket.emit('join', {
                 username: username,
                 nickname: nickname,

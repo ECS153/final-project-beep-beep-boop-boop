@@ -192,7 +192,6 @@ socket.on('connected', function() {
 
 socket.on('public key', function(data){
     // @Ryan import server public key
-
    importPemKey(data)
    .then (function(converted_key) {
        server_public_key = converted_key;
@@ -244,26 +243,29 @@ function handle_login() {
         ).then(function(generated_keys) {
             keys = generated_keys;
             return window.crypto.subtle.exportKey('jwk', keys.publicKey);
-        }).then (function(public_key){
+        }).then (function(public_key) {
 
 //             @Ryan encrypt with server key
 //             This is the one you will use: (comment out the one on the bottom)
 //
-//            encoded = encode(JSON.stringify({
-//                username: username,
-//                nickname: nickname,
-//                public_key: public_key
-//            }));
-//            encrypt(encoded, server_public_key)
-//            .then (function(encrypted) {
-//                socket.emit('join', encrypted);
-//            });
-
-            socket.emit('join', {
+            encoded = encode(JSON.stringify({
                 username: username,
                 nickname: nickname,
                 public_key: public_key
+            }));
+
+            a = await encrypt(encoded, server_public_key);
+            console.log(a);
+            .then (function(encrypted) {
+                socket.emit('join', encrypted);
             });
+
+
+//            socket.emit('join', {
+//                username: username,
+//                nickname: nickname,
+//                public_key: public_key
+//            });
         });
 
         document.getElementById("nickname").innerHTML = nickname;

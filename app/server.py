@@ -111,13 +111,13 @@ def handle_messages(data):
     # print(data['encrypted'])
     # print("Decrypted:")
     # print(RSA_script.decrypt(data['encrypted']))
-    data['recipient'] = server_list.SERVERS[0]
-    url = 'https://'+ data['recipient'] +'/forwardMessage'
-    payload = data['encrypted']
-    r = requests.post(url, data=payload, verify=False)
-    # print(r.text)
+
+    # data['recipient'] = server_list.SERVERS[0]
+    # url = 'https://'+ data['recipient'] +'/forwardMessage'
+    # payload = data['encrypted']
+    # r = requests.post(url, data=payload, verify=False)
     
-    # emit('message', data['encrypted'], room=socket[data['recipient']])
+    emit('message', data['encrypted'], room=socket[data['recipient']])
     
 
     # FIXME: when we do mixnet
@@ -143,7 +143,8 @@ def main():
     # print("Decrypted: ", decrypted_data)
     # print("***************************")
 
-    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
+    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
+    # socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':

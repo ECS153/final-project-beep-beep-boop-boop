@@ -7,7 +7,7 @@ __General updates:__
     * Action item: help Ryan with encryption
 * Ryan
     * Importing / exporting encryption keys (Client)
-    * Design doc: [here](https://docs.google.com/document/d/1R9tIxG5AqJVSUjScXPtiAXdhUqcRYamuthF7OYNpJHs/)
+    * Design doc: [here](https://drive.google.com/open?id=1R9tIxG5AqJVSUjScXPtiAXdhUqcRYamuthF7OYNpJHs)
     * Action item: Import key generated on pycryptodome on client’s end
 * Patrick 
     * Host server, GET request to retrieve server public keys (Mixnet)

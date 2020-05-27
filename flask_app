@@ -1,0 +1,14 @@
+server {
+    listen 443 ssl;
+    server_name 64.227.56.166;
+    ssl_certificate /home/pat/myproject/final-project-beep-beep-boop-boop/app/cert.pem;
+    ssl_certificate_key /home/pat/myproject/final-project-beep-beep-boop-boop/app/key.pem;
+
+    location / {
+        proxy_pass https://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+

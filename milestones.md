@@ -1,3 +1,24 @@
+# Milestone 3
+### 5/26/2020 Meeting:
+__General updates:__
+* Hin
+    * Messenger, client and server
+    * Design doc [here](https://drive.google.com/open?id=10iXIhPNr6L_bwHTY6exelX9roOYps0DCxlVlcjvgl6Q)
+    * Action item: help Ryan with encryption
+* Ryan
+    * Importing / exporting encryption keys (Client)
+    * Action item: import key generated on pycryptodome on client’s end
+* Patrick 
+    * Host server, GET request to retrieve server public keys (Mixnet)
+    * Design doc [here](https://docs.google.com/document/d/18s74NmGxdNouq81UD24lhhx95ZskYEFLPxZUpY-tmvw/edit?usp=sharing)
+    * Action item: Finalize data forwarding
+__Agenda:__
+    * Troubleshoot bugs
+    * Film video for milestone 3
+__Notes:__ 
+    * Ask Sam if it would be a better idea to ditch pyCryptodome and instead make a separate JS script on the server so server keys are generated through Web Crypto as well. There shouldn’t be any more conflict that way. We spent 4 days on this already.
+
+
 
 # Milestone 2
 ### 5/19/2020 Meeting

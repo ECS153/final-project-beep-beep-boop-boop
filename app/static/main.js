@@ -11,7 +11,7 @@ var online_users = null;
 var current_recipient;
 var message_history = {};
 var unread = {};
-
+var online_mixnets = null;
 
 // EXAMPLE USE OF FUNCTIONS
 async function testEncryptDecrypt(){
@@ -191,12 +191,11 @@ socket.on('connected', function() {
 });
 
 socket.on('public key', function(data){
-    // @Ryan import server public key
-   importPemKey(data)
-   .then (function(converted_key) {
-       server_public_key = converted_key;
-       console.log(server_public_key);
-   });
+    server_public_key = data;
+});
+
+socket.on('online mixnet server', function(data) {
+    online_mixnets = data;
 });
 
 socket.on('message', function(data) {
@@ -244,28 +243,11 @@ function handle_login() {
             keys = generated_keys;
             return window.crypto.subtle.exportKey('jwk', keys.publicKey);
         }).then (function(public_key) {
-
-//             @Ryan encrypt with server key
-//             This is the one you will use: (comment out the one on the bottom)
-//
-            encoded = encode(JSON.stringify({
+            socket.emit('join', {
                 username: username,
                 nickname: nickname,
                 public_key: public_key
-            }));
-
-            a = await encrypt(encoded, server_public_key);
-            console.log(a);
-            .then (function(encrypted) {
-                socket.emit('join', encrypted);
             });
-
-
-//            socket.emit('join', {
-//                username: username,
-//                nickname: nickname,
-//                public_key: public_key
-//            });
         });
 
         document.getElementById("nickname").innerHTML = nickname;
@@ -368,9 +350,12 @@ function send_message(){
             }));
             encrypt(encoded, importedKey)
             .then (function (encrypted) {
+                recipients = [recipient_id];
+                recipients = recipients.concat(shuffle_array(online_mixnets));
+
                 socket.emit('message', {
                     encrypted: encrypted,
-                    recipient: recipient_id
+                    recipient: recipients
                 })
                 textfield.value = '';
                 textfield.focus();
@@ -409,4 +394,9 @@ function load_messages() {
 
     if (chat_area.children.length != 0)
         chat_area.lastChild.scrollIntoView();
+}
+
+function shuffle_array(arr) {
+    // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+    return arr.reduce((a,v)=>a.splice(Math.floor(Math.random() * a.length), 0, v) && a, []);
 }

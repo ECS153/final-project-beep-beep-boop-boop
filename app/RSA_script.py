@@ -12,41 +12,40 @@ import settings
 class Keys:  # since python doesn't support private, try to only use the method to access variable to avoid mistakes.
     __private_key = None
     __public_key = None
-    __singleton = None
 
-    def __init__(self):
-        if Keys.__singleton is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            if os.path.exists(settings.PATH_PRIVATE_KEY) and os.path.exists(settings.PATH_PUBLIC_KEY):
-                self.__private_key = RSA.import_key(open(settings.PATH_PRIVATE_KEY).read())
-                self.__public_key = RSA.import_key(open(settings.PATH_PUBLIC_KEY).read())
+    def __init__(self, public_pem_path=None, private_pem_path=None):
+        if not public_pem_path and not private_pem_path:
+            if os.path.exists(settings.PATH_PUBLIC_KEY) and os.path.exists(settings.PATH_PRIVATE_KEY):
+                self.__private_key = RSA.import_key(open(private_pem_path).read())
+                self.__public_key = RSA.import_key(open(public_pem_path).read())
             else:  # create new set of keys
                 key = RSA.generate(2048)
-                self.__private_key = key.export_key(settings.KEY_ENCODING_EXTENSION)
-                self.__public_key = key.publickey().export_key(settings.KEY_ENCODING_EXTENSION)
+                self.__private_key = key
+                self.__public_key = key.publickey()
                 outf = open(settings.PATH_PRIVATE_KEY, "wb")
-                outf.write(self.__private_key)
+                outf.write(self.__private_key.export_key(settings.KEY_ENCODING_EXTENSION))
                 outf.close()
                 outf = open(settings.PATH_PUBLIC_KEY, "wb")
-                outf.write(self.__public_key)
+                outf.write(self.__public_key.export_key(settings.KEY_ENCODING_EXTENSION))
                 outf.close()
+        else:
+            if public_pem_path:
+                if os.path.exists(public_pem_path):
+                    self.__public_key = RSA.import_key(open(public_pem_path).read())
+                else:
+                    raise FileNotFoundError
 
-            Keys.__singleton = self
+            if private_pem_path:
+                if os.path.exists(private_pem_path):
+                    self.__private = RSA.import_key(open(private_pem_path).read())
+                else:
+                    raise FileNotFoundError
 
-    @staticmethod
-    def getPublicKey():
-        if Keys.__singleton is None:
-            Keys()
+    def getPublicKey(self):
+        return self.__public_key
 
-        return Keys.__singleton.__public_key
-
-    @staticmethod
-    def getPrivateKey():
-        if Keys.__singleton is None:
-            Keys()
-
-        return Keys.__singleton.__private_key
+    def getPrivateKey(self):
+        return self.__private_key
 
 
 def encrypt(data, public_key):
@@ -63,8 +62,7 @@ def encrypt(data, public_key):
     return encoded
 
 
-def decrypt(encoded_data):
-    private_key = RSA.import_key(open("private.pem").read())
+def decrypt(encoded_data, private_key):
     enc_session_key, nonce, tag, ciphertext = encoded_data
 
     # Decrypt the session key with the private RSA key

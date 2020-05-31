@@ -14,45 +14,41 @@ import re
 # for flask socketio
 
 
+hosting_address = '0.0.0.0'
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)
+key = RSA_script.Keys(settings.PATH_PRIVATE_KEY, settings.PATH_PUBLIC_KEY)
 client = {}
 socket = {}  # username as key, sid as value
 socket_inv = {}  # sid as value, username as key
+online_mixnets = {}
 
 
 @app.route('/')
 def sessions():
     return render_template('website.html')
 
-@app.route('/getServerPublicKey', methods=['GET'])
-def get_public_key():
-    return RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
 
-@app.route('/forwardMessage', methods=['POST'])
-def forward_message():
+@app.route('/key', methods=['POST'])
+def handle_incoming_key():
     data = request.get_data()
-    # print("Encrypted Message After Post:")
-    # print(data)
-    decrypted_data = RSA_script.decrypt(data)
-    # print(decrypted_data)
-    recipient = decrypted_data['recipient']
-    payload = decrypted_data['encrypted']
-    # isIp = re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', recipient)
-    # if (isIp != None):
-    url = 'https://'+ recipient +'/forwardMessage'
-    requests.post(url, data=payload, verify=False)
-    # else:
-    #     emit('message', decrypted_data, room=socket['recipient'])
+    # TODO @patrick how to get sender?
+    # online_mixnets[data['sender']] = data['public_key']
 
 
-    return 'Success'
+@app.route('/incoming_package', methods=['POST'])
+def handle_incoming_package():
+    data = request.get_data()
+    decrypted = RSA_script.decrypt(data, key.getPrivateKey())
+    emit('message', decrypted['encrypted'], room=socket[data['recipient']])
+
 
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
-    emit('public key', RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION))
+    emit('public key', key.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION))
+    emit('online mixnet server', list(online_mixnets.keys()))
 
 
 @socketio.on('disconnect')
@@ -68,14 +64,6 @@ def handle_disconnect():
 
 @socketio.on('join')
 def assign_private_room(data):
-    # @Ryan
-    if data['username'] is None:
-        print(data)
-        decrypted = RSA_script.decrypt(data)
-        temp = json.loads(decrypted)
-        print(temp) # should see 'username', 'nickname', 'public key'
-    # don't touch the ones below. Its what the server process after the server decrypts
-
     if data['username'] in socket:  # user already logged in somewhere, disable previous room
         emit('disconnect', data, room=socket[data['username']])  # to let client know, actual disconnect will happen from timeout
         sid = socket.pop(data['username'])
@@ -106,42 +94,48 @@ def distribute_user_list():
 
 @socketio.on('message')
 def handle_messages(data):
-    # print(data['recipient'])
-    # print("Encrypted Message Before Post:")
-    # print(data['encrypted'])
-    # print("Decrypted:")
-    # print(RSA_script.decrypt(data['encrypted']))
+    if len(data['recipient']) == 1:
+        emit('message', data['encrypted'], room=socket[data['recipient'][0]])
+    else:
+        recipient_id = data['recipient'].pop(0)
+        package = {
+            "encrypted": {
+                "encrypted": data['encrypted'],
+                "recipient": recipient_id,
+                "real_package": 1
+            },
+            "recipient": hosting_address
+        }
 
-    # data['recipient'] = server_list.SERVERS[0]
-    # url = 'https://'+ data['recipient'] +'/forwardMessage'
-    # payload = data['encrypted']
-    # r = requests.post(url, data=payload, verify=False)
-    
-    emit('message', data['encrypted'], room=socket[data['recipient']])
-    
+        while data['recipient']:
+            recipient = data['recipient'].pop(0)
+            if recipient in online_mixnets:
+                package = {
+                    "encrypted": package,
+                    "recipient": recipient
+                }
+            else:
+                continue
 
-    # FIXME: when we do mixnet
-    # onion layer should goes as follows: ( ) indicates client encryption, < > indicates server encryption
-    # < < < < < ( message, sender ), recipient, this server >, mixnet server 2 >, mixnet server 1 >, this server >
-    # client should be given list of all the mixnet server IP and public key and create this route
-    #
-    # http request to recipient server, then each mixnet server peel off a layer
-    # when it comes back to this server, emit('message', data, room=socket[data['recipient']])
+        recipient = package['recipient']
+        encrypted = RSA_script.encrypt(package.encode('utf-8'), online_mixnets[recipient])
+        url = 'https://' + data['recipient'] + '/handle_incoming_package'
+        requests.post(url, data=encrypted, verify=False)
+
+
+def json_n_encode(data):
+    return json.dumps(data).encode("utf-8")
 
 
 def main():
-    # ENCRYPTION SAMPLE
-    # data = "I am a potato who is eating potato from a potato plant in a potato farm."
-    # encrypted_data = RSA_script.encrypt(data.encode("utf-8"), RSA_script.Keys.getPublicKey())
-    # decrypted_data = RSA_script.decrypt(encrypted_data)
-    #
-    # print("************Encryption Test***************")
-    # print("Original: ", data)
-    # print("***************************")
-    # print("Encrypted: ", encrypted_data)
-    # print("***************************")
-    # print("Decrypted: ", decrypted_data)
-    # print("***************************")
+    for server_address in server_list.SERVERS:
+        if server_address != hosting_address:
+            try:
+                url = 'https://' + server_address + '/getServerPublicKey'
+                requests.post(url, verify=False)
+            except requests.exceptions.ConnectionError:
+                print(server_address + " is down.")
+                pass
 
     socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
     # socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))

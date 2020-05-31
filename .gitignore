@@ -6,6 +6,8 @@
 .idea/vcs.xml
 .idea/workspace.xml
 *.pem
+!mixnet_public.pem
+!mixnet_private.pem
 app/.DS_Store
 app/templates/.DS_Store
 *.pyc

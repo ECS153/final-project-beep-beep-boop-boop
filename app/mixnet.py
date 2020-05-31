@@ -13,11 +13,12 @@ socketio = SocketIO(app, ping_interval=100000, ping_timeout=100000)
 key = RSA_script.Keys("mixnet_public.pem", "mixnet_private.pem")
 
 
-@app.route('/getPublicKey', methods=['GET'])
+@app.route('/getServerPublicKey', methods=['GET'])
 def get_public_key():
-    data = request.get_data()
-    url = 'https://' + data['recipient'] + '/key'
-    requests.post(url, data=RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION), verify=False)
+    # data = request.get_data()
+    # url = 'https://' + data['recipient'] + '/key'
+    # requests.post(url, data=RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION), verify=False)
+    return RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
 
 
 @app.route('/incoming', methods=['POST'])

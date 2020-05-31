@@ -132,7 +132,8 @@ def main():
         if server_address != hosting_address:
             try:
                 url = 'https://' + server_address + '/getServerPublicKey'
-                requests.post(url, verify=False)
+                response = requests.get(url, verify=False)
+                online_mixnets[server_address] = response
             except requests.exceptions.ConnectionError:
                 print(server_address + " is down.")
                 pass

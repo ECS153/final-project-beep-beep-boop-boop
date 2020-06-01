@@ -18,7 +18,7 @@ def get_public_key():
     # data = request.get_data()
     # url = 'https://' + data['recipient'] + '/key'
     # requests.post(url, data=RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION), verify=False)
-    return RSA_script.Keys.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
+    return RSA_script.Keys().getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
 
 
 @app.route('/incoming', methods=['POST'])

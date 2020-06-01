@@ -41,12 +41,11 @@ class Keys:  # since python doesn't support private, try to only use the method 
                 else:
                     raise FileNotFoundError
 
-    def getPublicKey():
-        return __public_key
+    def getPublicKey(self):
+        return self.__public_key
 
     def getPrivateKey(self):
-        return __private_key
-
+        return self.__private_key
 
 
 def encrypt(data, public_key):

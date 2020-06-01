@@ -48,6 +48,7 @@ def handle_incoming_package():
 def handle_connect():
     print('Client connected')
     emit('public key', key.getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION))
+    # print(online_mixnets)
     emit('online mixnet server', list(online_mixnets.keys()))
 
 
@@ -128,16 +129,19 @@ def json_n_encode(data):
 
 
 def main():
+    # print("Before for")
     for server_address in server_list.SERVERS:
+        # print("In for")
         if server_address != hosting_address:
             try:
                 url = 'https://' + server_address + '/getServerPublicKey'
+                print("Get at: " + url)
                 response = requests.get(url, verify=False)
-                online_mixnets[server_address] = response
+                print("Response: " + response.text)
+                online_mixnets[server_address] = response.text
             except requests.exceptions.ConnectionError:
                 print(server_address + " is down.")
                 pass
-
     socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
     # socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 

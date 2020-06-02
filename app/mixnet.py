@@ -10,7 +10,7 @@ import requests
 
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
-socketio = SocketIO(app, ping_interval=100000, ping_timeout=100000)
+socketio = SocketIO(app, ping_interval=25, ping_timeout=60)
 key = Keys()
 
 

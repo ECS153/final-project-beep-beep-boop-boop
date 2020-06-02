@@ -14,7 +14,7 @@ import re
 # for flask socketio
 
 
-hosting_address = '0.0.0.0'
+hosting_address = '127.0.0.1:5000'
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)
@@ -30,7 +30,7 @@ def sessions():
     return render_template('website.html')
 
 
-@app.route('/incoming_package', methods=['POST'])
+@app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_package():
     package = request.get_data()
     item = package.pop()

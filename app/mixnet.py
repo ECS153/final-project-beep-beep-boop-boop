@@ -46,6 +46,7 @@ def handle_incoming_packageV2():
     # print(data)
     encoded = encode_array(package)
     decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
+    print(decrypted)
     # print(decrypted['recipient'])
     url = 'https://' + decrypted['recipient'] + '/handle_incoming_package'
     print("URL: ")

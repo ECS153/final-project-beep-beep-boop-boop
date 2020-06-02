@@ -55,7 +55,7 @@ def handle_incoming_package():
 @app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_packageV2():
     print(request.get_data())
-    package = json.load(request.get_data())
+    package = json.loads(request.get_data())
     print("Package: ")
     print(package)
     encoded = encode_array(package)

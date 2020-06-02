@@ -8,7 +8,7 @@ APP_SECRET_KEY = 'beepbeepboopboop2020beerflu'
 
 # Socket
 PORT = 5000
-PING_TIMEOUT = 60
+PING_TIMEOUT = 1000
 PING_INTERVAL = 25
 
 

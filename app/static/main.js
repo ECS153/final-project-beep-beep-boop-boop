@@ -4,6 +4,7 @@
 let socket = io()
 let ONLINE_USER_FETCH_DELAY = 500  // 1000 = 1 sec
 
+var username_prev;
 var username;
 var nickname_prev;
 var nickname;
@@ -173,6 +174,9 @@ socket.on('disconnect', function(){
     color_strip = document.getElementsByClassName("color_strip")[0];
     color_strip.classList.add("yellow");
     color_strip.classList.remove("green");
+    chat = document.getElementById("chat");
+    chat.children[1].classList.add("hidden");  // hide chat
+    chat.children[0].classList.remove("hidden");  // show placeholder
 });
 
 socket.on('user list', function(user_list) {
@@ -227,6 +231,7 @@ socket.on('message', function(data) {
 // Handler functions
 function handle_login() {
     login_card = document.getElementById("login_view").children[0];
+    username_prev = username
     username = login_card.children[1].value;
     nickname = login_card.children[3].value;
 
@@ -253,6 +258,11 @@ function handle_login() {
                 public_key: public_key
             });
         });
+
+        if (username != username_prev) {
+            message_history = {};
+            unread = {};
+        }
 
         document.getElementById("nickname").innerHTML = nickname;
         login_card.children[6].classList.add("invisible");

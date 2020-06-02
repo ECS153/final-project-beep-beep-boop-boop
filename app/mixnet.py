@@ -32,6 +32,7 @@ def handle_incoming_package():
     recipient = decrypt(encoded, key.getPrivateKey())
     # print(recipient)
     url = 'https://' + recipient + '/handle_incoming_package'
+    print(recipient)
     requests.post(url, data=json.dumps(package), verify=False)
     return 'Success'
 

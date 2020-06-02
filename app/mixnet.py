@@ -29,10 +29,11 @@ def handle_incoming_package():
     # print(data)
     item = package.pop()
     encoded = encode_array(item)
+
     recipient = decrypt(encoded, key.getPrivateKey())
-    # print(recipient)
+    print("Recipient: ")
+    print(recipient,flush=True)
     url = 'https://' + recipient + '/handle_incoming_package'
-    print(recipient)
     requests.post(url, data=json.dumps(package), verify=False)
     return 'Success'
 

@@ -128,7 +128,7 @@ def handle_messages(data):
 
         item = {
             "recipient": recipient_id,
-            "real_package:": True
+            "real_package": True
         }
 
         package = [decode_item(data['encrypted']),

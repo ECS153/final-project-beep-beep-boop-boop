@@ -14,7 +14,7 @@ import re
 # for flask socketio
 
 
-hosting_address = '127.0.0.1:5000'
+hosting_address = '64.225.124.67'
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)

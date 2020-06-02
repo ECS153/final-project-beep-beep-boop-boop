@@ -3,6 +3,7 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 import RSA_script
 import settings
+import json
 import server_list
 import requests
 
@@ -10,7 +11,7 @@ import requests
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=100000, ping_timeout=100000)
-key = RSA_script.Keys("mixnet_public.pem", "mixnet_private.pem")
+key = RSA_script.Keys()
 
 
 @app.route('/getServerPublicKey', methods=['GET'])
@@ -23,21 +24,14 @@ def get_public_key():
 
 @app.route('/incoming', methods=['POST'])
 def handle_incoming_package():
-    data = request.get_data()
+    data = json.loads(request.get_data())
     # print("Encrypted Message After Post:")
     # print(data)
-    decrypted = RSA_script.decrypt(data, key.getPrivateKey())
-    # print(decrypted_data)
-    recipient = decrypted['recipient']
-
-    if recipient in server_list.SERVERS:
-        recipient_key = RSA_script.Keys("mixnet_public.pem")
-    else:
-        recipient_key = RSA_script.Keys("public.pem")
-
-    package = RSA_script.encrypt(decrypted['encrypted'], recipient_key.getPublicKey())
+    encrypted = data.pop()
+    recipient = RSA_script.decrypt(encrypted, key.getPrivateKey())
+    # print(recipient)
     url = 'https://' + recipient + '/incoming'
-    requests.post(url, data=package, verify=False)
+    requests.post(url, data=data, verify=False)
     return 'Success'
 
 

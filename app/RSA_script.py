@@ -1,9 +1,9 @@
-
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 import os.path
 import settings
+
 
 # refer to https://pycryptodome.readthedocs.io/en/latest/src/examples.html#generate-public-key-and-private-key
 # for encrypting / decrypting (see the RSA session)
@@ -13,8 +13,8 @@ class Keys:  # since python doesn't support private, try to only use the method 
     __private_key = None
     __public_key = None
 
-    def __init__(self, public_pem_path=None, private_pem_path=None):
-        if not public_pem_path and not private_pem_path:
+    def __init__(self, public_pem=None):
+        if not public_pem:
             if os.path.exists(settings.PATH_PUBLIC_KEY) and os.path.exists(settings.PATH_PRIVATE_KEY):
                 self.__private_key = RSA.import_key(open(settings.PATH_PRIVATE_KEY).read())
                 self.__public_key = RSA.import_key(open(settings.PATH_PUBLIC_KEY).read())
@@ -29,18 +29,8 @@ class Keys:  # since python doesn't support private, try to only use the method 
                 outf.write(self.__public_key.export_key(settings.KEY_ENCODING_EXTENSION))
                 outf.close()
         else:
-            if public_pem_path:
-                if os.path.exists(public_pem_path):
-                    self.__public_key = RSA.import_key(open(public_pem_path).read())
-                else:
-                    raise FileNotFoundError
-
-            if private_pem_path:
-                if os.path.exists(private_pem_path):
-                    self.__private = RSA.import_key(open(private_pem_path).read())
-                else:
-                    raise FileNotFoundError
-
+            if public_pem:
+                self.__public_key = RSA.import_key(public_pem)
 
     # def __init__(self):
     #     if Keys.__singleton is not None:

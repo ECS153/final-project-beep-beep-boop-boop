@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, close_room, disconnect
 import json
@@ -18,7 +17,7 @@ hosting_address = '0.0.0.0'
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)
-key = RSA_script.Keys(settings.PATH_PRIVATE_KEY, settings.PATH_PUBLIC_KEY)
+key = RSA_script.Keys()
 client = {}
 socket = {}  # username as key, sid as value
 socket_inv = {}  # sid as value, username as key
@@ -66,7 +65,8 @@ def handle_disconnect():
 @socketio.on('join')
 def assign_private_room(data):
     if data['username'] in socket:  # user already logged in somewhere, disable previous room
-        emit('disconnect', data, room=socket[data['username']])  # to let client know, actual disconnect will happen from timeout
+        emit('disconnect', data,
+             room=socket[data['username']])  # to let client know, actual disconnect will happen from timeout
         sid = socket.pop(data['username'])
         socket_inv.pop(sid)
         close_room(sid)
@@ -99,29 +99,27 @@ def handle_messages(data):
         emit('message', data['encrypted'], room=socket[data['recipient'][0]])
     else:
         recipient_id = data['recipient'].pop(0)
-        package = {
-            "encrypted": {
-                "encrypted": data['encrypted'],
-                "recipient": recipient_id,
-                "real_package": 1
-            },
-            "recipient": hosting_address
+
+        item = {
+            "recipient": recipient_id,
+            "real_package:": 1
         }
 
-        while data['recipient']:
-            recipient = data['recipient'].pop(0)
-            if recipient in online_mixnets:
-                package = {
-                    "encrypted": package,
-                    "recipient": recipient
-                }
-            else:
-                continue
+        package = [data['encrypted'],
+                   RSA_script.encrypt(json.dumps(item).encode("utf-8"), key.getPublicKey())]
 
-        recipient = package['recipient']
-        encrypted = RSA_script.encrypt(package.encode('utf-8'), online_mixnets[recipient])
-        url = 'https://' + data['recipient'] + '/handle_incoming_package'
-        requests.post(url, data=encrypted, verify=False)
+        for i in range(len(data['recipient'])):
+            item = data['recipient'][i]
+
+            if i + 1 != len(data['recipient']):
+                recipient_key = RSA_script.Keys(online_mixnets[data['recipient'][i+1]])
+                item = RSA_script.encrypt(item.encode("utf-8"), recipient_key.getPublicKey())
+
+            package.append(item)
+
+        # print(package)
+        url = 'https://' + package.pop() + '/handle_incoming_package'
+        requests.post(url, data=json.dumps(package), verify=False)
 
 
 def json_n_encode(data):

@@ -44,7 +44,7 @@ def handle_incoming_packageV2():
     # print("Encrypted Message After Post:")
     # print(data)
     encoded = encode_array(package)
-    decrypted = decrypt(encoded, key.getPrivateKey())
+    decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
     # print(decrypted['recipient'])
     url = 'https://' + decrypted['recipient'] + '/incoming'
     print("URL: ")

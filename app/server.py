@@ -44,7 +44,7 @@ def handle_incoming_package():
 def handle_incoming_packageV2():
     package = request.get_data()
     encoded = encode_array(package)
-    decrypted = decrypt(encoded, key.getPrivateKey())
+    decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
     if decrypted['real_package']:
         emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])
 
@@ -158,7 +158,9 @@ def handle_messagesV2(data):
                 }).encode("utf-8"), recipient_key.getPublicKey()))
 
         url = 'https://' + data['recipient'].pop() + '/handle_incoming_package'
-        requests.post(url, data=json.dumps(package), verify=False)
+        print("URL: ")
+        print(url)
+        print(requests.post(url, data=json.dumps(package), verify=False).text)
         # json.loads()
         # encode_array()
         # decrypted=decrypt()

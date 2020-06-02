@@ -33,6 +33,7 @@ def handle_incoming_packageV2():
     package = json.loads(request.get_data())
     encoded = encode_array(package)
     decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
+    print(decrypted)
     if decrypted['real_package']:
         socketio.emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])
     return 'Success'

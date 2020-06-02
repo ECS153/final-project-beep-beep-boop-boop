@@ -22,7 +22,6 @@ def get_public_key():
     return Keys().getPublicKey().export_key(settings.KEY_ENCODING_EXTENSION)
 
 
-@app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_package():
     package = json.loads(request.get_data())
     # print("Encrypted Message After Post:")
@@ -39,7 +38,7 @@ def handle_incoming_package():
     return 'Success'
 
 
-@app.route('/incoming', methods=['POST'])
+@app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_packageV2():
     package = json.loads(request.get_data())
     # print("Encrypted Message After Post:")

@@ -10,7 +10,7 @@ import requests
 
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
-socketio = SocketIO(app, ping_interval=25, ping_timeout=60)
+socketio = SocketIO(app, ping_interval=100000, ping_timeout=100000)
 key = Keys()
 
 
@@ -35,7 +35,7 @@ def handle_incoming_package():
     print(recipient,flush=True)
     url = 'https://' + recipient + '/handle_incoming_package'
     response = requests.post(url, data=json.dumps(package), verify=False)
-    print(response)
+    print(response.text)
     return 'Success'
 
 

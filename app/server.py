@@ -14,7 +14,7 @@ import re
 # for flask socketio
 
 
-hosting_address = '0.0.0.0'
+hosting_address = '127.0.0.1:5000'
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)
@@ -30,7 +30,7 @@ def sessions():
     return render_template('website.html')
 
 
-@app.route('/incoming_package', methods=['POST'])
+@app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_package():
     package = request.get_data()
     item = package.pop()
@@ -123,7 +123,9 @@ def handle_messages(data):
 
 
         url = 'https://' + package.pop() + '/handle_incoming_package'
-        requests.post(url, data=json.dumps(package), verify=False)
+        print("Url: ")
+        print(url)
+        print(requests.post(url, data=json.dumps(package), verify=False).text)
 
 
 @socketio.on('message')
@@ -171,6 +173,7 @@ def main():
             except requests.exceptions.ConnectionError:
                 print(server_address + " is down.")
                 pass
+    print(online_mixnets)
     socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
     # socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 

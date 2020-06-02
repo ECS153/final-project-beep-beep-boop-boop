@@ -36,6 +36,19 @@ def handle_incoming_package():
     return 'Success'
 
 
+@app.route('/incoming', methods=['POST'])
+def handle_incoming_packageV2():
+    package = json.loads(request.get_data())
+    # print("Encrypted Message After Post:")
+    # print(data)
+    encoded = encode_array(package)
+    decrypted = decrypt(encoded, key.getPrivateKey())
+    # print(decrypted['recipient'])
+    url = 'https://' + decrypted['recipient'] + '/incoming'
+    requests.post(url, data=json.dumps(decrypted['encrypted']), verify=False)
+    return 'Success'
+
+
 def main():
     socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 

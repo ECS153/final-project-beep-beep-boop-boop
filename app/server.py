@@ -91,7 +91,7 @@ def distribute_user_list():
     emit('user list', json.loads(json.dumps(client)))
 
 
-@socketio.on('message')
+
 def handle_messages(data):
     if len(data['recipient']) == 1:
         emit('message', data['encrypted'], room=socket[data['recipient'][0]])
@@ -106,11 +106,11 @@ def handle_messages(data):
         package = [decode_item(data['encrypted']),
                    decode_array(encrypt(json.dumps(item).encode("utf-8"), key.getPublicKey()))]
 
-        print('*******************')
-        print(package[1][0])
-        print('*******************', type(package[1][0]))
-        print(encode_array(package[1]))
-        print('*******************', type(encode_array(package[1])))
+        # print('*******************')
+        # print(package[1][0])
+        # print('*******************', type(package[1][0]))
+        # print(encode_array(package[1]))
+        # print('*******************', type(encode_array(package[1])))
 
         for i in range(len(data['recipient'])):
             item = data['recipient'][i]
@@ -124,6 +124,35 @@ def handle_messages(data):
 
         url = 'https://' + package.pop() + '/handle_incoming_package'
         requests.post(url, data=json.dumps(package), verify=False)
+
+
+@socketio.on('message')
+def handle_messagesV2(data):
+    if len(data['recipient']) == 1:
+        emit('message', data['encrypted'], room=socket[data['recipient'][0]])
+    else:
+        package = decode_array(encrypt(json.dumps({
+            "encrypted": decode_item(data['encrypted']),
+            "recipient": data['recipient'][0],
+            "real_package:": True
+        }).encode("utf-8"), key.getPublicKey()))
+
+        data['recipient'][0] = hosting_address
+
+        for i in range(len(data['recipient'])):
+            if i + 1 != len(data['recipient']):
+                recipient_key = Keys(online_mixnets[data['recipient'][i + 1]])
+                package = decode_array(encrypt(json.dumps({
+                    "encrypted": package,
+                    "recipient": data['recipient'][i]
+                }).encode("utf-8"), recipient_key.getPublicKey()))
+
+        url = 'https://' + data['recipient'].pop() + '/handle_incoming_package'
+        requests.post(url, data=json.dumps(package), verify=False)
+        # json.loads()
+        # encode_array()
+        # decrypted=decrypt()
+        # send decrypted['encrypted'] to decrypted['recipient']
 
 
 def json_n_encode(data):

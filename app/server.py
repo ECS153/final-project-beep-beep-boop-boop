@@ -184,8 +184,8 @@ def main():
                 print(server_address + " is down.")
                 pass
     print(online_mixnets)
-    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
-    # socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
+    # socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
+    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':

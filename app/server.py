@@ -30,7 +30,6 @@ def sessions():
     return render_template('website.html')
 
 
-@app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_package():
     package = request.get_data()
     item = package.pop()
@@ -39,6 +38,15 @@ def handle_incoming_package():
 
     if decrypted['real_package']:
         emit('message', decrypted['encrypted'], room=socket[decrypted['recipient']])
+
+
+@app.route('/handle_incoming_package', methods=['POST'])
+def handle_incoming_packageV2():
+    package = request.get_data()
+    encoded = encode_array(package)
+    decrypted = decrypt(encoded, key.getPrivateKey())
+    if decrypted['real_package']:
+        emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])
 
 
 @socketio.on('connect')

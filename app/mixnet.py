@@ -34,8 +34,8 @@ def handle_incoming_package():
     print("Recipient: ")
     print(recipient,flush=True)
     url = 'https://' + recipient + '/handle_incoming_package'
-    request = requests.post(url, data=json.dumps(package), verify=False)
-    print(request)
+    response = requests.post(url, data=json.dumps(package), verify=False)
+    print(response)
     return 'Success'
 
 

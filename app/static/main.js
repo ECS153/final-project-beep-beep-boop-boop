@@ -2,6 +2,8 @@
 // let socket = io.connect('https://64.227.56.166', {secure: true});
 // let socket = io.connect()
 let socket = io()
+let ONLINE_USER_FETCH_DELAY = 500  // 1000 = 1 sec
+
 var username;
 var nickname_prev;
 var nickname;
@@ -12,6 +14,8 @@ var current_recipient;
 var message_history = {};
 var unread = {};
 var online_mixnets = null;
+
+
 
 // EXAMPLE USE OF FUNCTIONS
 async function testEncryptDecrypt(){
@@ -163,7 +167,7 @@ document.getElementById("chat_input").children[1].addEventListener("click", send
 // Sockets
 socket.on('disconnect', function(){
     login_view = document.getElementById("login_view");
-    login_view.children[0].children[6].innerHTML = '... Session expired (new login detected) ...';
+    login_view.children[0].children[6].innerHTML = '... Session expired ...';
     login_view.children[0].children[6].classList.remove("invisible");
     login_view.classList.remove("hidden")
     color_strip = document.getElementsByClassName("color_strip")[0];
@@ -177,7 +181,7 @@ socket.on('user list', function(user_list) {
 
     setTimeout(function(){
         socket.emit('request user list');
-    }, 5000);
+    }, ONLINE_USER_FETCH_DELAY);
 });
 
 socket.on('connected', function() {

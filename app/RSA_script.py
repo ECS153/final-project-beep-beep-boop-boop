@@ -16,42 +16,12 @@ class Keys:  # since python doesn't support private, try to only use the method 
 
     def __init__(self, public_pem=None):
         if not public_pem:
-            if os.path.exists(settings.PATH_PUBLIC_KEY) and os.path.exists(settings.PATH_PRIVATE_KEY):
-                self.__private_key = RSA.import_key(open(settings.PATH_PRIVATE_KEY).read())
-                self.__public_key = RSA.import_key(open(settings.PATH_PUBLIC_KEY).read())
-            else:  # create new set of keys
-                key = RSA.generate(2048)
-                self.__private_key = key
-                self.__public_key = key.publickey()
-                outf = open(settings.PATH_PRIVATE_KEY, "wb")
-                outf.write(self.__private_key.export_key(settings.KEY_ENCODING_EXTENSION))
-                outf.close()
-                outf = open(settings.PATH_PUBLIC_KEY, "wb")
-                outf.write(self.__public_key.export_key(settings.KEY_ENCODING_EXTENSION))
-                outf.close()
+            key = RSA.generate(2048)
+            self.__private_key = key
+            self.__public_key = key.publickey()
         else:
             if public_pem:
                 self.__public_key = RSA.import_key(public_pem)
-
-    # def __init__(self):
-    #     if Keys.__singleton is not None:
-    #         raise Exception("This class is a singleton!")
-    #     else:
-    #         if os.path.exists(settings.PATH_PRIVATE_KEY) and os.path.exists(settings.PATH_PUBLIC_KEY):
-    #             self.__private_key = RSA.import_key(open(settings.PATH_PRIVATE_KEY).read())
-    #             self.__public_key = RSA.import_key(open(settings.PATH_PUBLIC_KEY).read())
-    #         else:  # create new set of keys
-    #             key = RSA.generate(2048)
-    #             self.__private_key = key.export_key(settings.KEY_ENCODING_EXTENSION)
-    #             self.__public_key = key.publickey().export_key(settings.KEY_ENCODING_EXTENSION)
-    #             outf = open(settings.PATH_PRIVATE_KEY, "wb")
-    #             outf.write(self.__private_key)
-    #             outf.close()
-    #             outf = open(settings.PATH_PUBLIC_KEY, "wb")
-    #             outf.write(self.__public_key)
-    #             outf.close()
-
-    #         Keys.__singleton = self
 
     def getPublicKey(self):
         return self.__public_key

@@ -3,6 +3,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 import os.path
 import settings
+import base64
 
 
 # refer to https://pycryptodome.readthedocs.io/en/latest/src/examples.html#generate-public-key-and-private-key
@@ -84,3 +85,25 @@ def decrypt(encoded_data, private_key):
     cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
     data = cipher_aes.decrypt_and_verify(ciphertext, tag)
     return data.decode("utf-8")
+
+
+def decode_array(array):
+    result = []
+    for x in array:
+        result.append(base64.b64encode(x).decode())
+    return result
+
+
+def encode_array(array):
+    result = []
+    for x in array:
+        result.append(base64.decodebytes(x.encode()))
+    return result
+
+
+def decode_item(byte):
+    return base64.b64encode(byte).decode()
+
+
+def encode_item(byte):
+    return base64.decodebytes(byte.encode())

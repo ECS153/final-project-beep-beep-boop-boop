@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, close_room, disconnect
 import json
-import RSA_script
+from RSA_script import *
 import server_list
 import settings
 import requests
+import base64
 import re
 
 # https://stackoverflow.com/questions/45918818/how-to-send-message-from-server-to-client-using-flask-socket-io
@@ -17,7 +18,7 @@ hosting_address = '0.0.0.0'
 app = Flask(__name__)
 app.config['SECRET KEY'] = settings.APP_SECRET_KEY
 socketio = SocketIO(app, ping_interval=settings.PING_INTERVAL, ping_timeout=settings.PING_TIMEOUT)
-key = RSA_script.Keys()
+key = Keys()
 client = {}
 socket = {}  # username as key, sid as value
 socket_inv = {}  # sid as value, username as key
@@ -29,18 +30,15 @@ def sessions():
     return render_template('website.html')
 
 
-@app.route('/key', methods=['POST'])
-def handle_incoming_key():
-    data = request.get_data()
-    # TODO @patrick how to get sender?
-    # online_mixnets[data['sender']] = data['public_key']
-
-
 @app.route('/incoming_package', methods=['POST'])
 def handle_incoming_package():
-    data = request.get_data()
-    decrypted = RSA_script.decrypt(data, key.getPrivateKey())
-    emit('message', decrypted['encrypted'], room=socket[data['recipient']])
+    package = request.get_data()
+    item = package.pop()
+    encoded = encode_item(item)
+    decrypted = decrypt(encoded, key.getPrivateKey())
+
+    if decrypted['real_package']:
+        emit('message', decrypted['encrypted'], room=socket[decrypted['recipient']])
 
 
 @socketio.on('connect')
@@ -102,22 +100,28 @@ def handle_messages(data):
 
         item = {
             "recipient": recipient_id,
-            "real_package:": 1
+            "real_package:": True
         }
 
-        package = [data['encrypted'],
-                   RSA_script.encrypt(json.dumps(item).encode("utf-8"), key.getPublicKey())]
+        package = [decode_item(data['encrypted']),
+                   decode_array(encrypt(json.dumps(item).encode("utf-8"), key.getPublicKey()))]
+
+        print('*******************')
+        print(package[1][0])
+        print('*******************', type(package[1][0]))
+        print(encode_array(package[1]))
+        print('*******************', type(encode_array(package[1])))
 
         for i in range(len(data['recipient'])):
             item = data['recipient'][i]
 
             if i + 1 != len(data['recipient']):
-                recipient_key = RSA_script.Keys(online_mixnets[data['recipient'][i+1]])
-                item = RSA_script.encrypt(item.encode("utf-8"), recipient_key.getPublicKey())
+                recipient_key = Keys(online_mixnets[data['recipient'][i+1]])
+                item = decode_array(encrypt(item.encode("utf-8"), recipient_key.getPublicKey()))
 
             package.append(item)
 
-        # print(package)
+
         url = 'https://' + package.pop() + '/handle_incoming_package'
         requests.post(url, data=json.dumps(package), verify=False)
 
@@ -133,9 +137,7 @@ def main():
         if server_address != hosting_address:
             try:
                 url = 'https://' + server_address + '/getServerPublicKey'
-                print("Get at: " + url)
                 response = requests.get(url, verify=False)
-                print("Response: " + response.text)
                 online_mixnets[server_address] = response.text
             except requests.exceptions.ConnectionError:
                 print(server_address + " is down.")

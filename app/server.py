@@ -164,7 +164,7 @@ def handle_messagesV2(data):
         package = decode_array(encrypt(json.dumps({
             "encrypted": decode_item(data['encrypted']),
             "recipient": data['recipient'][0],
-            "real_package:": True
+            "real_package": True
         }).encode("utf-8"), key.getPublicKey()))
 
         data['recipient'][0] = hosting_address

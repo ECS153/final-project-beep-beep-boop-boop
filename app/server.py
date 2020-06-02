@@ -123,6 +123,8 @@ def handle_messages(data):
 
 
         url = 'https://' + package.pop() + '/handle_incoming_package'
+        print("Url: ")
+        print(url)
         requests.post(url, data=json.dumps(package), verify=False)
 
 

@@ -66,7 +66,7 @@ def handle_incoming_packageV2():
     print(decrypted.keys)
     print(decrypted)
     if decrypted['real_package']:
-        emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])
+        socketio.emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])
 
 
 @socketio.on('connect')

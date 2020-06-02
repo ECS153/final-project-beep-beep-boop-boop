@@ -55,7 +55,11 @@ def handle_incoming_package():
 @app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_packageV2():
     package = request.get_data()
+    print("Package: ")
+    print(package)
     encoded = encode_array(package)
+    print("Encoded: ")
+    print(encoded)
     decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
     if decrypted['real_package']:
         emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])

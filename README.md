@@ -1,5 +1,4 @@
 # Mixnet Messenger
-Mixnet Messenger
 
 ## Get Started
 

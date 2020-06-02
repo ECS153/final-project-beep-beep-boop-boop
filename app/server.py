@@ -24,6 +24,18 @@ socket = {}  # username as key, sid as value
 socket_inv = {}  # sid as value, username as key
 online_mixnets = {}
 
+for server_address in server_list.SERVERS:
+    # print("In for")
+    if server_address != hosting_address:
+        try:
+            url = 'https://' + server_address + '/getServerPublicKey'
+            response = requests.get(url, verify=False)
+            online_mixnets[server_address] = response.text
+        except requests.exceptions.ConnectionError:
+            print(server_address + " is down.")
+            pass
+print(online_mixnets)
+
 
 @app.route('/')
 def sessions():

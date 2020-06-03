@@ -4,8 +4,7 @@ import json
 from RSA_script import *
 import settings
 import requests
-import base64
-import re
+import random
 import collections
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -23,7 +22,6 @@ client = {}
 socket = {}  # username as key, sid as value
 socket_inv = {}  # sid as value, username as key
 online_mixnets = {}
-emit_msg_queue = collections.deque()
 post_msg_queue = collections.deque()
 sched = BackgroundScheduler()
 
@@ -40,6 +38,7 @@ def handle_incoming_packageV2():
     decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
     print(decrypted)
     if decrypted['real_package']:
+        print("*********************************************")
         socketio.emit('message', encode_item(decrypted['encrypted']), room=socket[decrypted['recipient']])
     return 'Success'
 
@@ -93,7 +92,7 @@ def distribute_user_list():
 @socketio.on('message')
 def handle_messagesV2(data):
     if len(data['recipient']) == 1:
-        emit_msg_queue.append((data['encrypted'], socket[data['recipient'][0]]))
+        emit('message', data['encrypted'], room=socket[data['recipient'][0]])
     else:
         package = decode_array(encrypt(json.dumps({
             "encrypted": decode_item(data['encrypted']),
@@ -116,28 +115,51 @@ def handle_messagesV2(data):
             "recipient": data['recipient'].pop()
         }
 
-        print(package)
-        url = 'http://' + package['recipient'] + '/handle_incoming_package'
-        post_msg_queue.append((url, package['encrypted']))
+        post_msg_queue.append(package)
+
+
+def generate_noise():
+    num_fake = random.randint(1, 2) * (len(post_msg_queue) + 1)
+
+    for _ in range(num_fake):
+        online_mixnets_address = list(online_mixnets.keys())
+        random.shuffle(online_mixnets_address)
+        recipient = [settings.MAIN_SERVER]
+        recipient.extend(online_mixnets_address)
+
+        package = decode_array(encrypt(json.dumps({
+            "encrypted": decode_array(encrypt("beepbeepboopboop".encode("utf-8"), key.getPublicKey())),
+            "recipient": "",
+            "real_package": False
+        }).encode("utf-8"), key.getPublicKey()))
+
+        for i in range(len(recipient)):
+            if i + 1 != len(recipient):
+                recipient_key = Keys(online_mixnets[recipient[i + 1]])
+                package = decode_array(encrypt(json.dumps({
+                    "encrypted": package,
+                    "recipient": recipient[i]
+                }).encode("utf-8"), recipient_key.getPublicKey()))
+
+        package = {
+            "encrypted": package,
+            "recipient": recipient.pop()
+        }
+
+        post_msg_queue.append(package)
 
 
 def send_queued_message():
-    #fake_quota = len(msg_queue)
-    while emit_msg_queue:
-        data, room = emit_msg_queue.popleft()
-        print("Emit")
-        socketio.emit('message', data, room=room)
-    
+    generate_noise()
+    random.shuffle(post_msg_queue)
     while post_msg_queue:
+        package = post_msg_queue.popleft()
+        # print(package)
+        url = 'http://' + package['recipient'] + '/handle_incoming_package'
         try:
-            url, encrypted = post_msg_queue.popleft()
-            print("Post request")
-            requests.post(url, data=json.dumps(encrypted), timeout=0.0001)
+            requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001)
         except requests.exceptions.ReadTimeout:
             pass
-    
-    # while fake_quota:
-    #     random generate
 
 
 def main():
@@ -150,7 +172,7 @@ def main():
         except requests.exceptions.ConnectionError:
             print(server_address + " is down.")
             pass
-    sched.add_job(send_queued_message, 'interval', seconds=10)
+    sched.add_job(send_queued_message, 'interval', seconds=2)
     sched.start()
     socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
 

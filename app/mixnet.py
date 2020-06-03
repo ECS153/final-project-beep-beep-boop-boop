@@ -33,8 +33,6 @@ def handle_incoming_packageV2():
     return 'Success'
 
 
-
-
 def main():
     if len(sys.argv) != 2:
         print("python3 mixnet.py <port>")

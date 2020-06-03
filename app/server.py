@@ -22,6 +22,16 @@ socket = {}  # username as key, sid as value
 socket_inv = {}  # sid as value, username as key
 online_mixnets = {}
 
+# Ping live servers
+for server_address in settings.SERVERS:
+    try:
+        url = 'https://' + server_address + '/getServerPublicKey'
+        response = requests.get(url, timeout=5, verify=False)
+        online_mixnets[server_address] = response.text
+        print("Connected to mixnet: " + server_address)
+    except exceptions.ConnectionError:
+        print(server_address + " is down.")
+        pass
 
 @app.route('/')
 def sessions():
@@ -114,23 +124,13 @@ def handle_messagesV2(data):
         print(package)
         url = 'https://' + package['recipient'] + '/handle_incoming_package'
         try:
-            requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001)
+            requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001, verify=False)
         except requests.exceptions.ReadTimeout:
             pass
 
 
 def main():
-    for server_address in settings.SERVERS:
-        try:
-            url = 'https://' + server_address + '/getServerPublicKey'
-            response = requests.get(url, timeout=5)
-            online_mixnets[server_address] = response.text
-            print("Connected to mixnet: " + server_address)
-        except requests.exceptions.ConnectionError:
-            print(server_address + " is down.")
-            pass
-
-    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE)
+    socketio.run(app, host='0.0.0.0', port=settings.PORT, debug=settings.DEBUG_MODE, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == '__main__':

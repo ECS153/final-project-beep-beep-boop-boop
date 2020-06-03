@@ -26,7 +26,7 @@ def handle_incoming_packageV2():
     decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
     print(decrypted)
     url = 'https://' + decrypted['recipient'] + '/handle_incoming_package'
-    requests.post(url, data=json.dumps(decrypted['encrypted']))
+    requests.post(url, data=json.dumps(decrypted['encrypted']), verify=False)
     return 'Success'
 
 

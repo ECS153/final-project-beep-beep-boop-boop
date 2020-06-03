@@ -57,7 +57,7 @@ PORT = 5000  # this is the port number for the frontend server
 ...
 
 SERVERS = [
-		'0.0.0.0:5001',
+    '0.0.0.0:5001',
     '0.0.0.0:5002',
     '0.0.0.0:5003',
   	# add here

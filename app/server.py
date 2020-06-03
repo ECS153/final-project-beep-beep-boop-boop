@@ -112,7 +112,7 @@ def handle_messagesV2(data):
         }
 
         print(package)
-        url = 'http://' + package['recipient'] + '/handle_incoming_package'
+        url = 'https://' + package['recipient'] + '/handle_incoming_package'
         try:
             requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001)
         except requests.exceptions.ReadTimeout:
@@ -122,7 +122,7 @@ def handle_messagesV2(data):
 def main():
     for server_address in settings.SERVERS:
         try:
-            url = 'http://' + server_address + '/getServerPublicKey'
+            url = 'https://' + server_address + '/getServerPublicKey'
             response = requests.get(url, timeout=5)
             online_mixnets[server_address] = response.text
             print("Connected to mixnet: " + server_address)

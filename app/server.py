@@ -153,7 +153,7 @@ def send_queued_message():
     random.shuffle(post_msg_queue)
     while post_msg_queue:
         package = post_msg_queue.popleft()
-        # print(package)
+        print(package)
         url = 'http://' + package['recipient'] + '/handle_incoming_package'
         try:
             requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001)

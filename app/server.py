@@ -124,7 +124,7 @@ def handle_messagesV2(data):
         print(package)
         url = 'https://' + package['recipient'] + '/handle_incoming_package'
         try:
-            requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001, verify=False)
+            requests.post(url, data=json.dumps(package['encrypted']), verify=False, timeout=0.0001)
         except requests.exceptions.ReadTimeout:
             pass
 

@@ -78,10 +78,20 @@ When the frontend server is started, a GET request is made to each mixnet server
 @app.route('/getServerPublicKey', methods=['GET'])
 def get_public_key():
 ```
+
 This function returns the public key of each server. If there is no response, then the server is assumed to be down and our frontend server won't try to pass messages through there.
 
 
+### How Mixnet Servers Handle Messages
 
+Each mixnet server has a POST request handler that accepts incoming packages.
+
+```python
+@app.route('/handle_incoming_package', methods=['POST'])
+def handle_incoming_packageV2():
+```
+
+The packages are converted to JSON, decoded, then reconverted to JSON to be sent off. They are then POST requested to the next server based on the 'recipient' field of the decrypted package. 
 
 
 

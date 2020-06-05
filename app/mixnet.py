@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from RSA_script import *
@@ -6,6 +5,7 @@ import settings
 import json
 import sys
 import requests
+import random
 import collections
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -26,17 +26,18 @@ def get_public_key():
 @app.route('/handle_incoming_package', methods=['POST'])
 def handle_incoming_packageV2():
     package = json.loads(request.get_data())    
-    post_msg_queue.append(package)
+    encoded = encode_array(package)
+    decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
+    post_msg_queue.append(decrypted)
+    return 'Success'
 
 
 def send_queued_message():
     random.shuffle(post_msg_queue)
     while post_msg_queue:
         package = post_msg_queue.popleft()
-        encoded = encode_array(package)
-        decrypted = json.loads(decrypt(encoded, key.getPrivateKey()))
-        print(decrypted)
-        url = 'http://' + decrypted['recipient'] + '/handle_incoming_package'
+        print(package)
+        url = 'http://' + package['recipient'] + '/handle_incoming_package'
         try:
             requests.post(url, data=json.dumps(package['encrypted']), timeout=0.0001)
         except requests.exceptions.ReadTimeout:

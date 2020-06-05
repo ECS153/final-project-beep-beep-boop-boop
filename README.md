@@ -70,6 +70,35 @@ If you chose not to run the mixnet servers on port 5001, 5002, 5003, you can rem
 
 ## Code Specifics
 
+### Our Encryption
+
+Our encryption follows the documentation [here](https://pycryptodome.readthedocs.io/en/latest/src/examples.html#generate-public-key-and-private-key) for RSA encryption.
+
+Our encrypt function
+```python
+def encrypt(data, public_key):
+```
+The sesssion key is encrypted with the public RSA key, and the data is encrypted with the AES session key.
+
+In the decrypt function
+```python
+def decrypt(encoded_data, private_key):
+```
+The session key is decrypted with the private RSA key, and the data is decrypted with the AES session key.
+
+One important factor to note is that in order to encrypt multiple times, the package must be converted to base 64. This is handled with
+
+```python
+def decode_array(array):
+def encode_array(array):
+def decode_item(byte):
+def encode_item(byte):
+```
+
+in RSA_script.py
+
+
+
 ### How Public Keys are Shared
 
 When the frontend server is started, a GET request is made to each mixnet server in our list of servers. These requests are caught here:

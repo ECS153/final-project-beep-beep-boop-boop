@@ -153,7 +153,7 @@ def send_queued_message():
     random.shuffle(post_msg_queue)
 ```
 
-When the interval passes, fake messages are added to our message queue and all of them are sent.
+When the 2s interval passes, fake messages are added to our message queue, which are then shuffled and sent out all at once.
 
 <br>
 

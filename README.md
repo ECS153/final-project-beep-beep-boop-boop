@@ -72,7 +72,7 @@ If you chose not to run the mixnet servers on port 5001, 5002, 5003, you can rem
 
 ### How Public Keys are Shared
 
-When the frontend server is started, a GET request is made to each mixnet server in our list of servers.
+When the frontend server is started, a GET request is made to each mixnet server in our list of servers. These requests are caught here:
 
 ```python
 @app.route('/getServerPublicKey', methods=['GET'])

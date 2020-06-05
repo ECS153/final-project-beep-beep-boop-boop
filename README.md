@@ -109,5 +109,36 @@ if decrypted['real_package']:
 
 The message is only delivered if it was real. Otherwise, it is dropped.
 
+<br>
+
+### How Noise is Added
+
+When each server is started, a scheduler is also started. 
+
+```python
+sched.add_job(send_queued_message, 'interval', seconds=2)
+sched.start()
+
+def send_queued_message():
+    generate_noise()
+    random.shuffle(post_msg_queue)
+```
+
+When the interval passes, fake messages are added to our message queue and all of them are sent.
+
+<br>
+
+
+#### How Fake Messages are Created
+
+TODO
+
+<br>
+
+
+
+
+
+
 
 

@@ -112,6 +112,58 @@ This function returns the public key of each server. If there is no response, th
 
 <br>
 
+### How Messages are Sent
+
+Each message is first encrypted with the recipient's public key. Then a randomized path through online mixnet servers is generated and the message is encrypted with mixnet public keys in reverse order of the path.
+
+```javascript
+encrypt(encoded, importedKey)
+    .then (function (encrypted) {
+        recipients = [recipient_id];
+        recipients = recipients.concat(shuffle_array(online_mixnets));
+```
+
+Encrypted messages are added to the message queue, which are sent out in batches.
+
+```python
+post_msg_queue.append(package)
+```
+
+<br>
+
+#### Batch messages
+
+When each server is started, a scheduler is also started. 
+
+```python
+sched.add_job(send_queued_message, 'interval', seconds=2)
+sched.start()
+
+def send_queued_message():
+    generate_noise()
+    random.shuffle(post_msg_queue)
+```
+
+When the 2s interval passes, fake messages are added to our message queue, which are then shuffled and sent out all at once.
+
+<br>
+
+#### How Fake Messages are Created
+
+For each message queue, a random number of fake messages are created, ranging from 1-2 times that of real messages. We encrypt them the same way as real messages but with the parameters as follows.
+
+```python
+package = decode_array(encrypt(json.dumps({
+            "encrypted": decode_array(encrypt("beepbeepboopboop".encode("utf-8"), key.getPublicKey())),
+            "recipient": "",
+            "real_package": False
+        }).encode("utf-8"), key.getPublicKey()))
+```
+
+The frontend server will check for the real_package boolean and drop fake messages.
+
+<br>
+
 ### How Mixnet Servers Handle Messages
 
 Each mixnet server has a POST request handler that accepts incoming packages.
@@ -139,42 +191,6 @@ if decrypted['real_package']:
 The message is only delivered if it was real. Otherwise, it is dropped.
 
 <br>
-
-### How Noise is Added
-
-When each server is started, a scheduler is also started. 
-
-```python
-sched.add_job(send_queued_message, 'interval', seconds=2)
-sched.start()
-
-def send_queued_message():
-    generate_noise()
-    random.shuffle(post_msg_queue)
-```
-
-When the 2s interval passes, fake messages are added to our message queue, which are then shuffled and sent out all at once.
-
-<br>
-
-
-#### How Fake Messages are Created
-
-For each message queue, a random number of fake messages are created, ranging from 1-2 times that of real messages. We encrypt them the same way as real messages but with the parameters as follows.
-
-```python
-package = decode_array(encrypt(json.dumps({
-            "encrypted": decode_array(encrypt("beepbeepboopboop".encode("utf-8"), key.getPublicKey())),
-            "recipient": "",
-            "real_package": False
-        }).encode("utf-8"), key.getPublicKey()))
-```
-
-The frontend server will check for the real_package boolean and drop fake messages.
-
-<br>
-
-
 
 
 

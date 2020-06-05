@@ -112,7 +112,7 @@ This function returns the public key of each server. If there is no response, th
 
 <br>
 
-### How Messages are Processed
+### How Messages are Encrypted
 
 Each message is first encrypted with the recipient's public key. Then a randomized path through online mixnet servers is generated and the message is encrypted with mixnet public keys in reverse order of the path.
 
@@ -131,7 +131,7 @@ post_msg_queue.append(package)
 
 <br>
 
-### How Noise is created
+### How Noise is Created
 
 For each message queue, a random number of fake messages are created, ranging from 1-2 times that of real messages. We encrypt them the same way as real messages but with the parameters as follows.
 

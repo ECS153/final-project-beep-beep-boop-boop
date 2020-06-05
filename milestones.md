@@ -1,3 +1,7 @@
+# Final Project
+Slides [here](https://docs.google.com/presentation/d/10Ieu1qB6eEVsYvvZYuXOZZ5iFY2X1T9v74__S8Fu4S0/edit?usp=sharing)
+
+
 # Final Presentation
 ### 6/3/2020 Presentation Day
 Video [here](https://drive.google.com/file/d/1_kyEAb9YVNagvDoS0vjFa4lNSCHDLQNd/view?usp=sharing)

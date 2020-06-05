@@ -95,7 +95,7 @@ def decode_item(byte):
 def encode_item(byte):
 ```
 
-in RSA_script.py
+in RSA_script.py. The reason why there are two variation of encode/decode is because Web Crypto (crypto library we used on JavaScript) returns bytes upon encrypting whereas PyCryptodome returns an array of bytes.
 
 <br>
 
@@ -108,7 +108,7 @@ When the frontend server is started, a GET request is made to each mixnet server
 def get_public_key():
 ```
 
-This function returns the public key of each server. If there is no response, then the server is assumed to be down and our frontend server won't try to pass messages through there.
+This function returns the public key of each server. If there is no response, then the server is assumed to be down and our frontend server won't try to pass messages through there. The mapping of the server address and public key are then stored and distrubuted when a user connect to the application socket.
 
 <br>
 

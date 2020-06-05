@@ -160,7 +160,17 @@ When the interval passes, fake messages are added to our message queue and all o
 
 #### How Fake Messages are Created
 
-TODO
+For each message queue, a random number of fake messages are created, ranging from 1-2 times that of real messages. We encrypt them the same way as real messages but with the parameters as follows.
+
+```python
+package = decode_array(encrypt(json.dumps({
+            "encrypted": decode_array(encrypt("beepbeepboopboop".encode("utf-8"), key.getPublicKey())),
+            "recipient": "",
+            "real_package": False
+        }).encode("utf-8"), key.getPublicKey()))
+```
+
+The frontend server will check for the real_package boolean and drop fake messages.
 
 <br>
 
